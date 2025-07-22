@@ -1,6 +1,8 @@
 package com.realestatecrm.controller;
 
+import com.realestatecrm.config.JwtUtil;
 import com.realestatecrm.entity.User;
+import com.realestatecrm.service.CustomUserDetailsService.UserPrincipal;
 import com.realestatecrm.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -24,41 +26,50 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public AuthController(AuthenticationManager authenticationManager, UserService userService) {
+    public AuthController(AuthenticationManager authenticationManager,
+                          UserService userService,
+                          JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User user = userService.getUserByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Generate JWT token
+        String jwt = jwtUtil.generateToken(authentication);
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
 
         return ResponseEntity.ok(new JwtResponse(
-                "Bearer", // token would be generated here with JWT
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getRole().name()
+                jwt,
+                "Bearer",
+                userPrincipal.getId(),
+                userPrincipal.getUsername(),
+                userPrincipal.getEmail(),
+                userPrincipal.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "")
         ));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser() {
+    public ResponseEntity<MessageResponse> logoutUser() {
+        // Note: With JWT, logout is typically handled client-side by removing the token
+        // For enhanced security, you could implement a token blacklist
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok(new MessageResponse("User logged out successfully!"));
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<UserProfileResponse> getCurrentUser(@AuthenticationPrincipal String username) {
-        User user = userService.getUserByUsername(username)
+    public ResponseEntity<UserProfileResponse> getCurrentUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        User user = userService.getUserById(userPrincipal.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return ResponseEntity.ok(new UserProfileResponse(
@@ -75,10 +86,10 @@ public class AuthController {
 
     @PutMapping("/profile")
     public ResponseEntity<UserProfileResponse> updateProfile(
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody UpdateProfileRequest request) {
 
-        User user = userService.getUserByUsername(username)
+        User user = userService.getUserById(userPrincipal.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setFirstName(request.getFirstName());
@@ -96,6 +107,20 @@ public class AuthController {
                 updatedUser.getRole().name(),
                 updatedUser.getStatus().name(),
                 updatedUser.getCreatedDate()
+        ));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<JwtResponse> refreshToken(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        String newToken = jwtUtil.generateTokenFromUserId(userPrincipal.getId());
+
+        return ResponseEntity.ok(new JwtResponse(
+                newToken,
+                "Bearer",
+                userPrincipal.getId(),
+                userPrincipal.getUsername(),
+                userPrincipal.getEmail(),
+                userPrincipal.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "")
         ));
     }
 
@@ -134,13 +159,15 @@ public class AuthController {
     }
 
     public static class JwtResponse {
+        private String accessToken;
         private String tokenType;
         private Long id;
         private String username;
         private String email;
         private String role;
 
-        public JwtResponse(String tokenType, Long id, String username, String email, String role) {
+        public JwtResponse(String accessToken, String tokenType, Long id, String username, String email, String role) {
+            this.accessToken = accessToken;
             this.tokenType = tokenType;
             this.id = id;
             this.username = username;
@@ -149,6 +176,7 @@ public class AuthController {
         }
 
         // Getters
+        public String getAccessToken() { return accessToken; }
         public String getTokenType() { return tokenType; }
         public Long getId() { return id; }
         public String getUsername() { return username; }
