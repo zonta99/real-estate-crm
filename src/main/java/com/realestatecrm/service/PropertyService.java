@@ -63,6 +63,16 @@ public class PropertyService {
     }
 
     @Transactional(readOnly = true)
+    public List<Property> getPropertiesByAgents(List<Long> agentIds) {
+        return propertyRepository.findByAgentIdIn(agentIds);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Property> getPropertiesByAgents(List<Long> agentIds, Pageable pageable) {
+        return propertyRepository.findByAgentIdIn(agentIds, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public List<Property> getAccessibleProperties(Long userId) {
         return propertyRepository.findAccessibleByAgent(userId);
     }

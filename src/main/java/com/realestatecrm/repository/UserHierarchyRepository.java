@@ -30,4 +30,11 @@ public interface UserHierarchyRepository extends JpaRepository<UserHierarchy, Lo
 
     @Query("SELECT uh FROM UserHierarchy uh WHERE uh.supervisor.id = :userId")
     List<UserHierarchy> findSubordinateRelationships(@Param("userId") Long userId);
+
+    @Query("""
+           SELECT CASE WHEN COUNT(uh) > 0 THEN true ELSE false END
+           FROM UserHierarchy uh
+           WHERE uh.supervisor.id = :startUserId AND uh.subordinate.id = :endUserId
+                      OR uh.supervisor.id = :endUserId AND uh.subordinate.id = :startUserId""")
+    boolean wouldCreateCycle(@Param("startUserId") Long startUserId, @Param("endUserId") Long endUserId);
 }

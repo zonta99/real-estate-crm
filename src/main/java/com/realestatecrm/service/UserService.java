@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +50,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    // ADDED: Missing method for role-based queries
+    @Transactional(readOnly = true)
+    public List<User> getUsersByRole(Role role) {
+        return userRepository.findByRoleAndActiveStatus(role);
     }
 
     public User createUser(User user) {
@@ -95,7 +102,7 @@ public class UserService {
             throw new IllegalArgumentException("Hierarchy relationship already exists");
         }
 
-        // Check for circular reference
+        // Check for circular reference - CORRECTED parameter order
         if (userHierarchyRepository.wouldCreateCycle(subordinateId, supervisorId)) {
             throw new IllegalArgumentException("Cannot create supervisor relationship: would create circular reference");
         }
@@ -116,6 +123,7 @@ public class UserService {
         return userRepository.findDirectSubordinates(supervisorId);
     }
 
+    // ADDED: Missing method implementation
     @Transactional(readOnly = true)
     public List<User> getAllSubordinates(Long supervisorId) {
         return userRepository.findAllSubordinates(supervisorId);
@@ -130,10 +138,31 @@ public class UserService {
             return userRepository.findAll();
         }
 
-        List<User> subordinates = getAllSubordinates(userId);
-        subordinates.add(user); // Include self
-        return subordinates;
+        List<User> accessibleUsers = new ArrayList<>();
+        accessibleUsers.add(user); // Include self
+        accessibleUsers.addAll(getAllSubordinates(userId)); // Add all subordinates
+        return accessibleUsers;
     }
+
+    // ADDED: Missing method for permission checking used in UserController
+    @Transactional(readOnly = true)
+    public boolean canManageUser(Long managerId, Long targetUserId) {
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new EntityNotFoundException("Manager not found with id: " + managerId));
+
+        if (manager.getRole() == Role.ADMIN) {
+            return true;
+        }
+
+        if (manager.getRole() == Role.BROKER) {
+            List<User> subordinates = getAllSubordinates(managerId);
+            return subordinates.stream().anyMatch(user -> user.getId().equals(targetUserId));
+        }
+
+        return false;
+    }
+    
+    
 
     private void validateNewUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -168,7 +197,4 @@ public class UserService {
             throw new IllegalArgumentException("Agents cannot supervise brokers");
         }
     }
-    
-    
-    
 }

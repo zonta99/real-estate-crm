@@ -33,4 +33,27 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT uh.supervisor FROM UserHierarchy uh WHERE uh.subordinate.id = :subordinateId")
     List<User> findDirectSupervisors(@Param("subordinateId") Long subordinateId);
+
+    // MISSING METHOD 1: Recursive subordinate finding
+    @Query("""
+        WITH RECURSIVE subordinate_hierarchy AS (
+            SELECT uh.subordinate_id, uh.supervisor_id, 1 as level
+            FROM user_hierarchy uh 
+            WHERE uh.supervisor_id = :supervisorId
+            
+            UNION ALL
+            
+            SELECT uh.subordinate_id, uh.supervisor_id, sh.level + 1
+            FROM user_hierarchy uh
+            INNER JOIN subordinate_hierarchy sh ON uh.supervisor_id = sh.subordinate_id
+            WHERE sh.level < 10
+        )
+        SELECT u FROM User u 
+        WHERE u.id IN (SELECT DISTINCT subordinate_id FROM subordinate_hierarchy)
+        """)
+    List<User> findAllSubordinates(@Param("supervisorId") Long supervisorId);
+
+    // MISSING METHOD 2: Role-based query with active status
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.status = 'ACTIVE' ORDER BY u.firstName, u.lastName")
+    List<User> findByRoleAndActiveStatus(@Param("role") Role role);
 }
