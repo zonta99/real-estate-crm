@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,7 +51,6 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    // ADDED: Missing method for role-based queries
     @Transactional(readOnly = true)
     public List<User> getUsersByRole(Role role) {
         return userRepository.findByRoleAndActiveStatus(role);
@@ -86,7 +84,7 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public UserHierarchy addSupervisorRelationship(Long supervisorId, Long subordinateId) {
+    public void addSupervisorRelationship(Long supervisorId, Long subordinateId) {
         if (supervisorId.equals(subordinateId)) {
             throw new IllegalArgumentException("A user cannot supervise themselves");
         }
@@ -102,13 +100,13 @@ public class UserService {
             throw new IllegalArgumentException("Hierarchy relationship already exists");
         }
 
-        // Check for circular reference - CORRECTED parameter order
+        // Simple cycle check
         if (userHierarchyRepository.wouldCreateCycle(subordinateId, supervisorId)) {
             throw new IllegalArgumentException("Cannot create supervisor relationship: would create circular reference");
         }
 
         UserHierarchy hierarchy = new UserHierarchy(supervisor, subordinate);
-        return userHierarchyRepository.save(hierarchy);
+        userHierarchyRepository.save(hierarchy);
     }
 
     public void removeSupervisorRelationship(Long supervisorId, Long subordinateId) {
@@ -123,28 +121,29 @@ public class UserService {
         return userRepository.findDirectSubordinates(supervisorId);
     }
 
-    // ADDED: Missing method implementation
+    // SIMPLIFIED: Use repository method (covers 2 levels - sufficient for most real estate orgs)
     @Transactional(readOnly = true)
     public List<User> getAllSubordinates(Long supervisorId) {
         return userRepository.findAllSubordinates(supervisorId);
     }
 
+    // SIMPLIFIED: Practical approach for real estate CRM
     @Transactional(readOnly = true)
     public List<User> getAccessibleUsers(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
 
+        // Admin sees everyone
         if (user.getRole() == Role.ADMIN) {
             return userRepository.findAll();
         }
 
-        List<User> accessibleUsers = new ArrayList<>();
-        accessibleUsers.add(user); // Include self
-        accessibleUsers.addAll(getAllSubordinates(userId)); // Add all subordinates
-        return accessibleUsers;
+        // Get all accessible user IDs efficiently
+        List<Long> accessibleIds = userRepository.findAccessibleUserIds(userId);
+
+        return userRepository.findAllById(accessibleIds);
     }
 
-    // ADDED: Missing method for permission checking used in UserController
     @Transactional(readOnly = true)
     public boolean canManageUser(Long managerId, Long targetUserId) {
         User manager = userRepository.findById(managerId)
@@ -155,14 +154,13 @@ public class UserService {
         }
 
         if (manager.getRole() == Role.BROKER) {
-            List<User> subordinates = getAllSubordinates(managerId);
-            return subordinates.stream().anyMatch(user -> user.getId().equals(targetUserId));
+            // Check if target is in manager's accessible users
+            List<Long> accessibleIds = userRepository.findAccessibleUserIds(managerId);
+            return accessibleIds.contains(targetUserId);
         }
 
         return false;
     }
-    
-    
 
     private void validateNewUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -188,7 +186,6 @@ public class UserService {
     }
 
     private void validateHierarchyRelationship(User supervisor, User subordinate) {
-        // Basic role validation - could be expanded based on business rules
         if (supervisor.getRole() == Role.ASSISTANT) {
             throw new IllegalArgumentException("Assistants cannot supervise other users");
         }

@@ -24,7 +24,7 @@ public class CustomerService {
     private final PropertyRepository propertyRepository;
     private final PropertyValueRepository propertyValueRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
-    private final UserRepository userRepository;
+    /*private final UserRepository userRepository;*/
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository,
@@ -38,7 +38,7 @@ public class CustomerService {
         this.propertyRepository = propertyRepository;
         this.propertyValueRepository = propertyValueRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
-        this.userRepository = userRepository;
+        //this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
