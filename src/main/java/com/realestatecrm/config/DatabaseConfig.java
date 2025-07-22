@@ -2,11 +2,10 @@ package com.realestatecrm.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
-@EnableJpaAuditing
-@EnableJpaRepositories(basePackages = "com.realestatecrm.repository")
+@EnableJpaAuditing // Keep this for created/modified date functionality
 public class DatabaseConfig {
-
+    // No need for @EnableJpaRepositories here.
+    // Spring Boot will handle it automatically.
 }

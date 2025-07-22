@@ -15,9 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,12 +27,6 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -49,18 +41,20 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .httpBasic(httpBasic -> httpBasic
+                        .authenticationEntryPoint(unauthorizedEntryPoint())
+                )
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints using AntPathRequestMatcher (non-deprecated)
+                        // Public endpoints
                         .requestMatchers(
-                                new AntPathRequestMatcher("/api/auth/**"),
-                                new AntPathRequestMatcher("/h2-console/**"),
-                                new AntPathRequestMatcher("/actuator/health"),
-                                new AntPathRequestMatcher("/swagger-ui/**"),
-                                new AntPathRequestMatcher("/v3/api-docs/**"),
-                                new AntPathRequestMatcher("/error")
+                                "/h2-console/**",
+                                "/actuator/health",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/error"
                         ).permitAll()
 
-                        // Role-based access using AntPathRequestMatcher
+                        // Role-based access for property attributes
                         .requestMatchers(HttpMethod.GET, "/api/property-attributes/**")
                         .hasAnyRole("ADMIN", "BROKER", "AGENT", "ASSISTANT")
                         .requestMatchers(HttpMethod.POST, "/api/property-attributes/**")
@@ -71,7 +65,7 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
 
                         // API endpoints require authentication
-                        .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
+                        .requestMatchers("/api/**").authenticated()
 
                         // Everything else requires authentication
                         .anyRequest().authenticated()
@@ -80,22 +74,19 @@ public class SecurityConfig {
                         .authenticationEntryPoint(unauthorizedEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())
                 )
-                // Modern headers configuration (Spring Security 6.1+)
+                // Modern headers configuration
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow H2 console
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'")
                         )
                         .httpStrictTransportSecurity(hstsConfig -> hstsConfig
                                 .maxAgeInSeconds(31536000)
-                                .includeSubdomains(true)
+                                .includeSubDomains(true)
                                 .preload(true)
                         )
                         .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
                 );
-
-        // Add JWT filter
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -125,7 +116,7 @@ public class SecurityConfig {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(
-                    "{\"error\": \"Unauthorized\", \"message\": \"" + authException.getMessage() + "\", \"path\": \"" + request.getRequestURI() + "\"}"
+                    "{\"error\": \"Unauthorized\", \"message\": \"Authentication required. Please provide valid credentials.\", \"path\": \"" + request.getRequestURI() + "\"}"
             );
         };
     }
@@ -136,7 +127,7 @@ public class SecurityConfig {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.getWriter().write(
-                    "{\"error\": \"Access Denied\", \"message\": \"" + accessDeniedException.getMessage() + "\", \"path\": \"" + request.getRequestURI() + "\"}"
+                    "{\"error\": \"Access Denied\", \"message\": \"Insufficient permissions to access this resource.\", \"path\": \"" + request.getRequestURI() + "\"}"
             );
         };
     }

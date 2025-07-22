@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -42,11 +43,11 @@ public class CustomerController {
     @GetMapping
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<Page<CustomerResponse>> getAllCustomers(
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) CustomerStatus status,
             Pageable pageable) {
 
-        User currentUser = userService.getUserByUsername(username)
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         Page<Customer> customers;
@@ -79,10 +80,10 @@ public class CustomerController {
     @PostMapping
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> createCustomer(
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreateCustomerRequest request) {
 
-        User currentUser = userService.getUserByUsername(username)
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         Customer customer = new Customer();
@@ -421,7 +422,7 @@ public class CustomerController {
         private String textValue;
         private BigDecimal numberMinValue;
         private BigDecimal numberMaxValue;
-        private Boolean booleanValue;
+        private final Boolean booleanValue;
         private String multiSelectValue;
 
         public CustomerSearchCriteriaResponse(Long id, Long customerId, Long attributeId, String attributeName,

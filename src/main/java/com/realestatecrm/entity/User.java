@@ -10,6 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
@@ -95,11 +96,6 @@ public class User implements UserDetails {
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
-    }
-
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 
@@ -148,4 +144,22 @@ public class User implements UserDetails {
         }
         return username;
     }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    }
+
+    // Add these missing methods:
+    @Override
+    public boolean isAccountNonExpired() { return status == UserStatus.ACTIVE; }
+
+    @Override
+    public boolean isAccountNonLocked() { return status == UserStatus.ACTIVE; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() { return status == UserStatus.ACTIVE; }
 }

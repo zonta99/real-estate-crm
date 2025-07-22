@@ -1,7 +1,6 @@
 package com.realestatecrm.controller;
 
 import com.realestatecrm.entity.User;
-import com.realestatecrm.entity.UserHierarchy;
 import com.realestatecrm.enums.Role;
 import com.realestatecrm.enums.UserStatus;
 import com.realestatecrm.service.UserService;
@@ -18,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -39,10 +39,10 @@ public class UserController {
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER')")
     public ResponseEntity<Page<UserResponse>> getAllUsers(
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserDetails userDetails,
             Pageable pageable) {
 
-        User currentUser = userService.getUserByUsername(username)
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         List<User> accessibleUsers = userService.getAccessibleUsers(currentUser.getId());
@@ -63,7 +63,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER') or @userService.getUserByUsername(authentication.name).get().id == #id")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
@@ -132,7 +132,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/subordinates")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER') or @userService.getUserByUsername(authentication.name).get().id == #id")
     public ResponseEntity<List<UserResponse>> getSubordinates(@PathVariable Long id) {
         List<User> subordinates = userService.getDirectSubordinates(id);
         List<UserResponse> responses = subordinates.stream()
@@ -203,7 +203,5 @@ public class UserController {
             LocalDateTime updatedDate
     ) {}
 
-
     public record MessageResponse(String message) {}
-
 }

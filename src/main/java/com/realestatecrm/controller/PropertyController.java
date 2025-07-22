@@ -15,12 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -40,13 +40,13 @@ public class PropertyController {
     @GetMapping
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<Page<PropertyResponse>> getAllProperties(
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) PropertyStatus status,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             Pageable pageable) {
 
-        User currentUser = userService.getUserByUsername(username)
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         Page<Property> properties;
@@ -75,10 +75,10 @@ public class PropertyController {
     @PostMapping
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<PropertyResponse> createProperty(
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody CreatePropertyRequest request) {
 
-        User currentUser = userService.getUserByUsername(username)
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         Property property = new Property();
@@ -155,10 +155,10 @@ public class PropertyController {
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<MessageResponse> shareProperty(
             @PathVariable Long id,
-            @AuthenticationPrincipal String username,
+            @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody SharePropertyRequest request) {
 
-        User currentUser = userService.getUserByUsername(username)
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         propertyService.shareProperty(id, request.getSharedWithUserId(), currentUser.getId());
