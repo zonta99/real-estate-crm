@@ -32,6 +32,14 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    # This ensures data.sql runs after schema creation
+    defer-datasource-initialization: true
+  
+  # SQL initialization
+  #sql:
+  #  init:
+  #    mode: always
+  #    data-locations: classpath:data.sql
   
   # Security Configuration
   security:

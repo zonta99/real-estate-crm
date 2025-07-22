@@ -74,11 +74,18 @@ public class SecurityConfig {
                         .authenticationEntryPoint(unauthorizedEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())
                 )
-                // Modern headers configuration
+                // Updated headers configuration for H2 Console compatibility
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow H2 console
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow H2 console frames
                         .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'")
+                                // Relaxed CSP for development - allows H2 console to work
+                                .policyDirectives("default-src 'self'; " +
+                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                                        "style-src 'self' 'unsafe-inline'; " +
+                                        "img-src 'self' data:; " +
+                                        "font-src 'self'; " +
+                                        "connect-src 'self'; " +
+                                        "frame-src 'self'")
                         )
                         .httpStrictTransportSecurity(hstsConfig -> hstsConfig
                                 .maxAgeInSeconds(31536000)
