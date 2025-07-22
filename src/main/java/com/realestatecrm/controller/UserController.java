@@ -75,12 +75,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setRole(request.getRole());
+        user.setUsername(request.username);
+        user.setPassword(request.password);
+        user.setEmail(request.email);
+        user.setFirstName(request.firstName);
+        user.setLastName(request.lastName);
+        user.setRole(request.role);
         user.setStatus(UserStatus.ACTIVE);
 
         User createdUser = userService.createUser(user);
@@ -94,11 +94,11 @@ public class UserController {
             @Valid @RequestBody UpdateUserRequest request) {
 
         User user = new User();
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
-        user.setRole(request.getRole());
-        user.setStatus(request.getStatus());
+        user.setFirstName(request.firstName);
+        user.setLastName(request.lastName);
+        user.setEmail(request.email);
+        user.setRole(request.role);
+        user.setStatus(request.status);
 
         User updatedUser = userService.updateUser(id, user);
         return ResponseEntity.ok(convertToUserResponse(updatedUser));
@@ -168,118 +168,42 @@ public class UserController {
     }
 
     // DTOs
-    public static class CreateUserRequest {
-        @NotBlank
-        @Size(min = 3, max = 20)
-        private String username;
+    public record CreateUserRequest(
+            @NotBlank @Size(min = 3, max = 20) String username,
+            @NotBlank @Size(min = 6, max = 40) String password,
+            @Email @NotBlank String email,
+            String firstName,
+            String lastName,
+            @NotNull Role role
+    ) {}
 
-        @NotBlank
-        @Size(min = 6, max = 40)
-        private String password;
+    public record UpdateUserRequest(
+            String firstName,
+            String lastName,
+            @Email @NotBlank String email,
+            @NotNull Role role,
+            @NotNull UserStatus status
+    ) {}
 
-        @Email
-        @NotBlank
-        private String email;
-
-        private String firstName;
-        private String lastName;
-
-        @NotNull
-        private Role role;
-
-        // Getters and setters
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-        public Role getRole() { return role; }
-        public void setRole(Role role) { this.role = role; }
-    }
-
-    public static class UpdateUserRequest {
-        private String firstName;
-        private String lastName;
-
-        @Email
-        @NotBlank
-        private String email;
-
-        @NotNull
-        private Role role;
-
-        @NotNull
-        private UserStatus status;
-
-        // Getters and setters
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public Role getRole() { return role; }
-        public void setRole(Role role) { this.role = role; }
-        public UserStatus getStatus() { return status; }
-        public void setStatus(UserStatus status) { this.status = status; }
-    }
-
-    public static class HierarchyRequest {
-        @NotNull
-        private Long supervisorId;
-
-        public Long getSupervisorId() { return supervisorId; }
-        public void setSupervisorId(Long supervisorId) { this.supervisorId = supervisorId; }
-    }
-
-    public static class UserResponse {
-        private Long id;
-        private String username;
-        private String email;
-        private String firstName;
-        private String lastName;
-        private Role role;
-        private UserStatus status;
-        private LocalDateTime createdDate;
-        private LocalDateTime updatedDate;
-
-        public UserResponse(Long id, String username, String email, String firstName, String lastName,
-                            Role role, UserStatus status, LocalDateTime createdDate, LocalDateTime updatedDate) {
-            this.id = id;
-            this.username = username;
-            this.email = email;
-            this.firstName = firstName;
-            this.lastName = lastName;
-            this.role = role;
-            this.status = status;
-            this.createdDate = createdDate;
-            this.updatedDate = updatedDate;
+    public record HierarchyRequest(@NotNull Long supervisorId) {
+        public Long getSupervisorId() {
+            return supervisorId;
         }
-
-        // Getters
-        public Long getId() { return id; }
-        public String getUsername() { return username; }
-        public String getEmail() { return email; }
-        public String getFirstName() { return firstName; }
-        public String getLastName() { return lastName; }
-        public Role getRole() { return role; }
-        public UserStatus getStatus() { return status; }
-        public LocalDateTime getCreatedDate() { return createdDate; }
-        public LocalDateTime getUpdatedDate() { return updatedDate; }
     }
 
-    public static class MessageResponse {
-        private String message;
+    public record UserResponse(
+            Long id,
+            String username,
+            String email,
+            String firstName,
+            String lastName,
+            Role role,
+            UserStatus status,
+            LocalDateTime createdDate,
+            LocalDateTime updatedDate
+    ) {}
 
-        public MessageResponse(String message) {
-            this.message = message;
-        }
 
-        public String getMessage() { return message; }
-    }
+    public record MessageResponse(String message) {}
+
 }
