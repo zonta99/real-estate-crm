@@ -1,16 +1,25 @@
 package com.realestatecrm.controller;
 
 import com.realestatecrm.entity.User;
+import com.realestatecrm.security.JwtUtils;
+import com.realestatecrm.service.CustomUserDetailsService;
 import com.realestatecrm.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -18,9 +27,41 @@ import java.time.LocalDateTime;
 public class AuthController {
 
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtils jwtUtils;
 
-    public AuthController(UserService userService) {
+    @Autowired
+    public AuthController(UserService userService,
+                          AuthenticationManager authenticationManager,
+                          JwtUtils jwtUtils) {
         this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<JwtResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.username(), loginRequest.password())
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        CustomUserDetailsService.UserPrincipal userDetails =
+                (CustomUserDetailsService.UserPrincipal) authentication.getPrincipal();
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new JwtResponse(
+                jwt,
+                userDetails.getId(),
+                userDetails.getUsername(),
+                userDetails.getEmail(),
+                roles
+        ));
     }
 
     @GetMapping("/profile")
@@ -80,7 +121,20 @@ public class AuthController {
         ));
     }
 
-    // Enhanced DTOs
+    // DTOs
+    public record LoginRequest(
+            @NotBlank String username,
+            @NotBlank String password
+    ) {}
+
+    public record JwtResponse(
+            String token,
+            Long id,
+            String username,
+            String email,
+            List<String> roles
+    ) {}
+
     public record UpdateProfileRequest(
             String firstName,
             String lastName,

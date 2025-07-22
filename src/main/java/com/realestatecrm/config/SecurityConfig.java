@@ -1,7 +1,10 @@
 package com.realestatecrm.config;
 
+import com.realestatecrm.security.AuthTokenFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -15,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -28,74 +32,12 @@ import java.util.List;
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+    @Autowired
+    private AuthTokenFilter authTokenFilter;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .httpBasic(httpBasic -> httpBasic
-                        .authenticationEntryPoint(unauthorizedEntryPoint())
-                )
-                .authorizeHttpRequests(authz -> authz
-                        // Public endpoints
-                        .requestMatchers(
-                                "/h2-console/**",
-                                "/actuator/health",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/error"
-                        ).permitAll()
-
-                        // Role-based access for property attributes
-                        .requestMatchers(HttpMethod.GET, "/api/property-attributes/**")
-                        .hasAnyRole("ADMIN", "BROKER", "AGENT", "ASSISTANT")
-                        .requestMatchers(HttpMethod.POST, "/api/property-attributes/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/property-attributes/**")
-                        .hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/property-attributes/**")
-                        .hasRole("ADMIN")
-
-                        // API endpoints require authentication
-                        .requestMatchers("/api/**").authenticated()
-
-                        // Everything else requires authentication
-                        .anyRequest().authenticated()
-                )
-                .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(unauthorizedEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler())
-                )
-                // Updated headers configuration for H2 Console compatibility
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow H2 console frames
-                        .contentSecurityPolicy(csp -> csp
-                                // Relaxed CSP for development - allows H2 console to work
-                                .policyDirectives("default-src 'self'; " +
-                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-                                        "style-src 'self' 'unsafe-inline'; " +
-                                        "img-src 'self' data:; " +
-                                        "font-src 'self'; " +
-                                        "connect-src 'self'; " +
-                                        "frame-src 'self'")
-                        )
-                        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-                                .maxAgeInSeconds(31536000)
-                                .includeSubDomains(true)
-                                .preload(true)
-                        )
-                        .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
-                );
-
-        return http.build();
     }
 
     @Bean
@@ -117,13 +59,132 @@ public class SecurityConfig {
         return source;
     }
 
+    // DEVELOPMENT PROFILE - Supports both JWT and Basic Auth
+    @Bean
+    @Profile("dev")
+    public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                // Support both JWT and Basic Auth
+                .httpBasic(httpBasic -> httpBasic
+                        .authenticationEntryPoint(unauthorizedEntryPoint())
+                )
+                .authorizeHttpRequests(authz -> authz
+                        // Public endpoints
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/h2-console/**",
+                                "/actuator/health",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/error"
+                        ).permitAll()
+
+                        // Role-based access for property attributes
+                        .requestMatchers(HttpMethod.GET, "/api/property-attributes/**")
+                        .hasAnyRole("ADMIN", "BROKER", "AGENT", "ASSISTANT")
+                        .requestMatchers(HttpMethod.POST, "/api/property-attributes/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/property-attributes/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/property-attributes/**")
+                        .hasRole("ADMIN")
+
+                        // All other API endpoints require authentication
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(unauthorizedEntryPoint())
+                        .accessDeniedHandler(accessDeniedHandler())
+                )
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.disable()) // Allow H2 console frames
+                        .contentSecurityPolicy(csp -> csp
+                                // Very relaxed CSP for development
+                                .policyDirectives("default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; " +
+                                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                                        "style-src 'self' 'unsafe-inline'; " +
+                                        "img-src 'self' data:; " +
+                                        "frame-src 'self'")
+                        )
+                )
+                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    // PRODUCTION PROFILE - JWT only (no Basic Auth)
+    @Bean
+    @Profile("prod")
+    public SecurityFilterChain prodSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(authz -> authz
+                        // Public endpoints
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/actuator/health",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/error"
+                        ).permitAll()
+
+                        // Role-based access for property attributes
+                        .requestMatchers(HttpMethod.GET, "/api/property-attributes/**")
+                        .hasAnyRole("ADMIN", "BROKER", "AGENT", "ASSISTANT")
+                        .requestMatchers(HttpMethod.POST, "/api/property-attributes/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/property-attributes/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/property-attributes/**")
+                        .hasRole("ADMIN")
+
+                        // All other API endpoints require authentication
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(unauthorizedEntryPoint())
+                        .accessDeniedHandler(accessDeniedHandler())
+                )
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.deny()) // Strict frame options
+                        .contentSecurityPolicy(csp -> csp
+                                // Strict CSP for production
+                                .policyDirectives("default-src 'self'; " +
+                                        "script-src 'self'; " +
+                                        "style-src 'self' 'unsafe-inline'; " +
+                                        "img-src 'self' data:; " +
+                                        "font-src 'self'")
+                        )
+                        .httpStrictTransportSecurity(hstsConfig -> hstsConfig
+                                .maxAgeInSeconds(31536000)
+                                .includeSubDomains(true)
+                                .preload(true)
+                        )
+                        .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                )
+                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
     @Bean
     public AuthenticationEntryPoint unauthorizedEntryPoint() {
         return (request, response, authException) -> {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(
-                    "{\"error\": \"Unauthorized\", \"message\": \"Authentication required. Please provide valid credentials.\", \"path\": \"" + request.getRequestURI() + "\"}"
+                    "{\"error\": \"Unauthorized\", \"message\": \"Authentication required. Please provide valid credentials or JWT token.\", \"path\": \"" + request.getRequestURI() + "\"}"
             );
         };
     }

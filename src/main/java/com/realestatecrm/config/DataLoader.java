@@ -38,7 +38,7 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println("=== DataLoader starting ===");
 
-        // Only load data if database is empty
+        // Only load data if the database is empty
         if (userRepository.count() == 0) {
             System.out.println("Loading initial data...");
             loadInitialData();
