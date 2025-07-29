@@ -132,6 +132,9 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/refresh",      // ADD THIS LINE
+                                "/api/auth/logout",       // ADD THIS LINE
+                                "/h2-console/**",         // (dev profile only)
                                 "/actuator/health",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
