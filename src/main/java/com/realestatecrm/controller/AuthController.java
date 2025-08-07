@@ -1,13 +1,12 @@
 package com.realestatecrm.controller;
 
+import com.realestatecrm.entity.Permission;
 import com.realestatecrm.entity.User;
 import com.realestatecrm.security.JwtUtils;
 import com.realestatecrm.service.CustomUserDetailsService;
 import com.realestatecrm.service.UserService;
 import com.realestatecrm.service.PermissionService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +18,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import com.realestatecrm.dto.auth.request.LoginRequest;
+import com.realestatecrm.dto.auth.response.*;
+import com.realestatecrm.dto.common.MessageResponse;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -168,41 +170,5 @@ public class AuthController {
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok(new MessageResponse("Logout successful"));
     }
-
-    // DTOs
-    public record LoginRequest(
-            @NotBlank String username,
-            @NotBlank String password
-    ) {}
-
-    public record LoginResponse(
-            String token,
-            UserInfo user,
-            int expiresIn
-    ) {}
-
-    public record UserInfo(
-            String id,
-            String username,
-            String email,
-            String firstName,
-            String lastName,
-            List<String> roles,
-            String status,
-            String createdDate,
-            String updatedDate
-    ) {}
-
-    public record RefreshTokenResponse(
-            String accessToken,
-            String refreshToken,
-            java.util.Date expiresAt
-    ) {}
-
-    public record Permission(
-            String resource,
-            List<String> actions
-    ) {}
-
-    public record MessageResponse(String message) {}
+    
 }

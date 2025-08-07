@@ -1,5 +1,10 @@
 package com.realestatecrm.controller;
 
+import com.realestatecrm.dto.common.MessageResponse;
+import com.realestatecrm.dto.user.request.CreateUserRequest;
+import com.realestatecrm.dto.user.request.HierarchyRequest;
+import com.realestatecrm.dto.user.request.UpdateUserRequest;
+import com.realestatecrm.dto.user.response.UserResponse;
 import com.realestatecrm.entity.User;
 import com.realestatecrm.enums.Role;
 import com.realestatecrm.enums.UserStatus;
@@ -75,12 +80,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = new User();
-        user.setUsername(request.username);
-        user.setPassword(request.password);
-        user.setEmail(request.email);
-        user.setFirstName(request.firstName);
-        user.setLastName(request.lastName);
-        user.setRole(request.role);
+        user.setUsername(request.username());
+        user.setPassword(request.password());
+        user.setEmail(request.email());
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setRole(request.role());
         user.setStatus(UserStatus.ACTIVE);
 
         User createdUser = userService.createUser(user);
@@ -94,11 +99,11 @@ public class UserController {
             @Valid @RequestBody UpdateUserRequest request) {
 
         User user = new User();
-        user.setFirstName(request.firstName);
-        user.setLastName(request.lastName);
-        user.setEmail(request.email);
-        user.setRole(request.role);
-        user.setStatus(request.status);
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        user.setEmail(request.email());
+        user.setRole(request.role());
+        user.setStatus(request.status());
 
         User updatedUser = userService.updateUser(id, user);
         return ResponseEntity.ok(convertToUserResponse(updatedUser));
@@ -166,42 +171,4 @@ public class UserController {
                 user.getUpdatedDate()
         );
     }
-
-    // DTOs
-    public record CreateUserRequest(
-            @NotBlank @Size(min = 3, max = 20) String username,
-            @NotBlank @Size(min = 6, max = 40) String password,
-            @Email @NotBlank String email,
-            String firstName,
-            String lastName,
-            @NotNull Role role
-    ) {}
-
-    public record UpdateUserRequest(
-            String firstName,
-            String lastName,
-            @Email @NotBlank String email,
-            @NotNull Role role,
-            @NotNull UserStatus status
-    ) {}
-
-    public record HierarchyRequest(@NotNull Long supervisorId) {
-        public Long getSupervisorId() {
-            return supervisorId;
-        }
-    }
-
-    public record UserResponse(
-            Long id,
-            String username,
-            String email,
-            String firstName,
-            String lastName,
-            Role role,
-            UserStatus status,
-            LocalDateTime createdDate,
-            LocalDateTime updatedDate
-    ) {}
-
-    public record MessageResponse(String message) {}
 }

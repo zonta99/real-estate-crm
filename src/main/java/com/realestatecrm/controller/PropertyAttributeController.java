@@ -1,20 +1,23 @@
 package com.realestatecrm.controller;
 
+import com.realestatecrm.dto.common.MessageResponse;
+import com.realestatecrm.dto.propertyattribute.request.CreateAttributeOptionRequest;
+import com.realestatecrm.dto.propertyattribute.request.CreateAttributeRequest;
+import com.realestatecrm.dto.propertyattribute.request.ReorderAttributesRequest;
+import com.realestatecrm.dto.propertyattribute.request.UpdateAttributeRequest;
+import com.realestatecrm.dto.propertyattribute.response.AttributeOptionResponse;
+import com.realestatecrm.dto.propertyattribute.response.PropertyAttributeResponse;
 import com.realestatecrm.entity.PropertyAttribute;
 import com.realestatecrm.entity.PropertyAttributeOption;
 import com.realestatecrm.enums.PropertyCategory;
-import com.realestatecrm.enums.PropertyDataType;
 import com.realestatecrm.service.PropertyAttributeService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -186,132 +189,5 @@ public class PropertyAttributeController {
                 option.getDisplayOrder()
         );
     }
-
-    // DTOs
-    public static class CreateAttributeRequest {
-        @NotBlank
-        private String name;
-
-        @NotNull
-        private PropertyDataType dataType;
-
-        @NotNull
-        private Boolean isRequired = false;
-
-        @NotNull
-        private Boolean isSearchable = true;
-
-        @NotNull
-        private PropertyCategory category;
-
-        private Integer displayOrder;
-
-        // Getters and setters
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public PropertyDataType getDataType() { return dataType; }
-        public void setDataType(PropertyDataType dataType) { this.dataType = dataType; }
-        public Boolean getIsRequired() { return isRequired; }
-        public void setIsRequired(Boolean isRequired) { this.isRequired = isRequired; }
-        public Boolean getIsSearchable() { return isSearchable; }
-        public void setIsSearchable(Boolean isSearchable) { this.isSearchable = isSearchable; }
-        public PropertyCategory getCategory() { return category; }
-        public void setCategory(PropertyCategory category) { this.category = category; }
-        public Integer getDisplayOrder() { return displayOrder; }
-        public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
-    }
-
-    public static class UpdateAttributeRequest extends CreateAttributeRequest {
-        // Inherits all fields from CreateAttributeRequest
-    }
-
-    public static class CreateAttributeOptionRequest {
-        @NotBlank
-        private String optionValue;
-        private Integer displayOrder;
-
-        public String getOptionValue() { return optionValue; }
-        public void setOptionValue(String optionValue) { this.optionValue = optionValue; }
-        public Integer getDisplayOrder() { return displayOrder; }
-        public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
-    }
-
-    public static class ReorderAttributesRequest {
-        @NotNull
-        private List<Long> attributeIds;
-
-        public List<Long> getAttributeIds() { return attributeIds; }
-        public void setAttributeIds(List<Long> attributeIds) { this.attributeIds = attributeIds; }
-    }
-
-    public static class PropertyAttributeResponse {
-        private Long id;
-        private String name;
-        private String dataType;
-        private Boolean isRequired;
-        private Boolean isSearchable;
-        private String category;
-        private Integer displayOrder;
-        private LocalDateTime createdDate;
-        private LocalDateTime updatedDate;
-        private List<AttributeOptionResponse> options;
-
-        public PropertyAttributeResponse(Long id, String name, String dataType, Boolean isRequired,
-                                         Boolean isSearchable, String category, Integer displayOrder,
-                                         LocalDateTime createdDate, LocalDateTime updatedDate,
-                                         List<AttributeOptionResponse> options) {
-            this.id = id;
-            this.name = name;
-            this.dataType = dataType;
-            this.isRequired = isRequired;
-            this.isSearchable = isSearchable;
-            this.category = category;
-            this.displayOrder = displayOrder;
-            this.createdDate = createdDate;
-            this.updatedDate = updatedDate;
-            this.options = options;
-        }
-
-        // Getters
-        public Long getId() { return id; }
-        public String getName() { return name; }
-        public String getDataType() { return dataType; }
-        public Boolean getIsRequired() { return isRequired; }
-        public Boolean getIsSearchable() { return isSearchable; }
-        public String getCategory() { return category; }
-        public Integer getDisplayOrder() { return displayOrder; }
-        public LocalDateTime getCreatedDate() { return createdDate; }
-        public LocalDateTime getUpdatedDate() { return updatedDate; }
-        public List<AttributeOptionResponse> getOptions() { return options; }
-    }
-
-    public static class AttributeOptionResponse {
-        private Long id;
-        private Long attributeId;
-        private String optionValue;
-        private Integer displayOrder;
-
-        public AttributeOptionResponse(Long id, Long attributeId, String optionValue, Integer displayOrder) {
-            this.id = id;
-            this.attributeId = attributeId;
-            this.optionValue = optionValue;
-            this.displayOrder = displayOrder;
-        }
-
-        // Getters
-        public Long getId() { return id; }
-        public Long getAttributeId() { return attributeId; }
-        public String getOptionValue() { return optionValue; }
-        public Integer getDisplayOrder() { return displayOrder; }
-    }
-
-    public static class MessageResponse {
-        private String message;
-
-        public MessageResponse(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() { return message; }
-    }
+    
 }

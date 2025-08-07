@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -77,13 +78,14 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers(
                                 "/api/auth/login",
-                                "/h2-console/**",
+                                "/api/auth/refresh",      // ADD THIS LINE
+                                "/api/auth/logout",       // ADD THIS LINE
+                                "/h2-console/**",         // (dev profile only)
                                 "/actuator/health",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/error"
                         ).permitAll()
-
                         // Role-based access for property attributes
                         .requestMatchers(HttpMethod.GET, "/api/property-attributes/**")
                         .hasAnyRole("ADMIN", "BROKER", "AGENT", "ASSISTANT")
@@ -103,7 +105,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())
                 )
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.disable()) // Allow H2 console frames
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable) // Allow H2 console frames
                         .contentSecurityPolicy(csp -> csp
                                 // Very relaxed CSP for development
                                 .policyDirectives("default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; " +
@@ -160,7 +162,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())
                 )
                 .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.deny()) // Strict frame options
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny) // Strict frame options
                         .contentSecurityPolicy(csp -> csp
                                 // Strict CSP for production
                                 .policyDirectives("default-src 'self'; " +
@@ -174,7 +176,9 @@ public class SecurityConfig {
                                 .includeSubDomains(true)
                                 .preload(true)
                         )
-                        .referrerPolicy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)
+                        )
                 )
                 // Add JWT filter before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)

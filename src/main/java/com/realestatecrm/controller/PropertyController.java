@@ -1,5 +1,13 @@
 package com.realestatecrm.controller;
 
+import com.realestatecrm.dto.common.MessageResponse;
+import com.realestatecrm.dto.property.request.CreatePropertyRequest;
+import com.realestatecrm.dto.property.request.SetPropertyValueRequest;
+import com.realestatecrm.dto.property.request.SharePropertyRequest;
+import com.realestatecrm.dto.property.request.UpdatePropertyRequest;
+import com.realestatecrm.dto.property.response.PropertyResponse;
+import com.realestatecrm.dto.property.response.PropertySharingResponse;
+import com.realestatecrm.dto.property.response.PropertyValueResponse;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.PropertyStatus;
 import com.realestatecrm.service.PropertyService;
@@ -249,170 +257,5 @@ public class PropertyController {
                 sharing.getSharedByUser().getFullName(),
                 sharing.getCreatedDate()
         );
-    }
-
-    // DTOs
-    public static class CreatePropertyRequest {
-        @NotBlank
-        private String title;
-        private String description;
-
-        @NotNull
-        @DecimalMin(value = "0.0", inclusive = false)
-        private BigDecimal price;
-
-        // Getters and setters
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public BigDecimal getPrice() { return price; }
-        public void setPrice(BigDecimal price) { this.price = price; }
-    }
-
-    public static class UpdatePropertyRequest {
-        @NotBlank
-        private String title;
-        private String description;
-
-        @NotNull
-        @DecimalMin(value = "0.0", inclusive = false)
-        private BigDecimal price;
-
-        @NotNull
-        private PropertyStatus status;
-
-        // Getters and setters
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public BigDecimal getPrice() { return price; }
-        public void setPrice(BigDecimal price) { this.price = price; }
-        public PropertyStatus getStatus() { return status; }
-        public void setStatus(PropertyStatus status) { this.status = status; }
-    }
-
-    public static class SetPropertyValueRequest {
-        @NotNull
-        private Long attributeId;
-        private Object value;
-
-        public Long getAttributeId() { return attributeId; }
-        public void setAttributeId(Long attributeId) { this.attributeId = attributeId; }
-        public Object getValue() { return value; }
-        public void setValue(Object value) { this.value = value; }
-    }
-
-    public static class SharePropertyRequest {
-        @NotNull
-        private Long sharedWithUserId;
-
-        public Long getSharedWithUserId() { return sharedWithUserId; }
-        public void setSharedWithUserId(Long sharedWithUserId) { this.sharedWithUserId = sharedWithUserId; }
-    }
-
-    public static class PropertyResponse {
-        private Long id;
-        private String title;
-        private String description;
-        private BigDecimal price;
-        private Long agentId;
-        private String agentName;
-        private PropertyStatus status;
-        private LocalDateTime createdDate;
-        private LocalDateTime updatedDate;
-
-        public PropertyResponse(Long id, String title, String description, BigDecimal price,
-                                Long agentId, String agentName, PropertyStatus status,
-                                LocalDateTime createdDate, LocalDateTime updatedDate) {
-            this.id = id;
-            this.title = title;
-            this.description = description;
-            this.price = price;
-            this.agentId = agentId;
-            this.agentName = agentName;
-            this.status = status;
-            this.createdDate = createdDate;
-            this.updatedDate = updatedDate;
-        }
-
-        // Getters
-        public Long getId() { return id; }
-        public String getTitle() { return title; }
-        public String getDescription() { return description; }
-        public BigDecimal getPrice() { return price; }
-        public Long getAgentId() { return agentId; }
-        public String getAgentName() { return agentName; }
-        public PropertyStatus getStatus() { return status; }
-        public LocalDateTime getCreatedDate() { return createdDate; }
-        public LocalDateTime getUpdatedDate() { return updatedDate; }
-    }
-
-    public static class PropertyValueResponse {
-        private Long id;
-        private Long propertyId;
-        private Long attributeId;
-        private String attributeName;
-        private String dataType;
-        private Object value;
-
-        public PropertyValueResponse(Long id, Long propertyId, Long attributeId, String attributeName,
-                                     Object dataType, Object value) {
-            this.id = id;
-            this.propertyId = propertyId;
-            this.attributeId = attributeId;
-            this.attributeName = attributeName;
-            this.dataType = dataType.toString();
-            this.value = value;
-        }
-
-        // Getters
-        public Long getId() { return id; }
-        public Long getPropertyId() { return propertyId; }
-        public Long getAttributeId() { return attributeId; }
-        public String getAttributeName() { return attributeName; }
-        public String getDataType() { return dataType; }
-        public Object getValue() { return value; }
-    }
-
-    public static class PropertySharingResponse {
-        private Long id;
-        private Long propertyId;
-        private Long sharedWithUserId;
-        private String sharedWithUserName;
-        private Long sharedByUserId;
-        private String sharedByUserName;
-        private LocalDateTime createdDate;
-
-        public PropertySharingResponse(Long id, Long propertyId, Long sharedWithUserId, String sharedWithUserName,
-                                       Long sharedByUserId, String sharedByUserName, LocalDateTime createdDate) {
-            this.id = id;
-            this.propertyId = propertyId;
-            this.sharedWithUserId = sharedWithUserId;
-            this.sharedWithUserName = sharedWithUserName;
-            this.sharedByUserId = sharedByUserId;
-            this.sharedByUserName = sharedByUserName;
-            this.createdDate = createdDate;
-        }
-
-        // Getters
-        public Long getId() { return id; }
-        public Long getPropertyId() { return propertyId; }
-        public Long getSharedWithUserId() { return sharedWithUserId; }
-        public String getSharedWithUserName() { return sharedWithUserName; }
-        public Long getSharedByUserId() { return sharedByUserId; }
-        public String getSharedByUserName() { return sharedByUserName; }
-        public LocalDateTime getCreatedDate() { return createdDate; }
-    }
-
-    public static class MessageResponse {
-        private String message;
-
-        public MessageResponse(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() { return message; }
     }
 }

@@ -1,6 +1,6 @@
 package com.realestatecrm.service;
 
-import com.realestatecrm.controller.AuthController.Permission;
+import com.realestatecrm.entity.Permission;
 import com.realestatecrm.entity.User;
 import com.realestatecrm.enums.Role;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 public class PermissionService {
 
-    public List<Permission> getUserPermissions(User user) {
+    public List<com.realestatecrm.entity.Permission> getUserPermissions(User user) {
         return new ArrayList<>(getRolePermissions(user.getRole()));
     }
 
