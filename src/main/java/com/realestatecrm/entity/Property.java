@@ -35,7 +35,7 @@ public class Property {
     private BigDecimal price;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "agent_id", nullable = false)
     private User agent;
 
