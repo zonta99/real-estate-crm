@@ -22,7 +22,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerSearchCriteriaRepository searchCriteriaRepository;
     private final PropertyRepository propertyRepository;
-    private final PropertyValueRepository propertyValueRepository;
+    private final AttributeValueRepository attributeValueRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
     /*private final UserRepository userRepository;*/
 
@@ -30,13 +30,13 @@ public class CustomerService {
     public CustomerService(CustomerRepository customerRepository,
                            CustomerSearchCriteriaRepository searchCriteriaRepository,
                            PropertyRepository propertyRepository,
-                           PropertyValueRepository propertyValueRepository,
+                           AttributeValueRepository attributeValueRepository,
                            PropertyAttributeRepository propertyAttributeRepository,
                            UserRepository userRepository) {
         this.customerRepository = customerRepository;
         this.searchCriteriaRepository = searchCriteriaRepository;
         this.propertyRepository = propertyRepository;
-        this.propertyValueRepository = propertyValueRepository;
+        this.attributeValueRepository = attributeValueRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
         //this.userRepository = userRepository;
     }
@@ -218,17 +218,19 @@ public class CustomerService {
     }
 
     private boolean matchesCriteria(Property property, CustomerSearchCriteria criteria) {
-        Optional<PropertyValue> propertyValue = propertyValueRepository
+        Optional<AttributeValue> attributeValue = attributeValueRepository
                 .findByPropertyIdAndAttributeId(property.getId(), criteria.getAttribute().getId());
 
-        if (propertyValue.isEmpty()) {
+        if (attributeValue.isEmpty()) {
             return false; // Property doesn't have this attribute value
         }
 
-        PropertyValue value = propertyValue.get();
+        AttributeValue value = attributeValue.get();
 
         return switch (criteria.getAttribute().getDataType()) {
-            case TEXT, SINGLE_SELECT -> matchesTextCriteria(value.getTextValue(), criteria.getTextValue());
+            //TODO - implement date range matching
+            
+            case TEXT, SINGLE_SELECT,DATE -> matchesTextCriteria(value.getTextValue(), criteria.getTextValue());
             case NUMBER ->
                     matchesNumberCriteria(value.getNumberValue(), criteria.getNumberMinValue(), criteria.getNumberMaxValue());
             case BOOLEAN -> matchesBooleanCriteria(value.getBooleanValue(), criteria.getBooleanValue());

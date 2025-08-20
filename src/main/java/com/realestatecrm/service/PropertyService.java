@@ -19,19 +19,19 @@ import java.util.Optional;
 public class PropertyService {
 
     private final PropertyRepository propertyRepository;
-    private final PropertyValueRepository propertyValueRepository;
+    private final AttributeValueRepository attributeValueRepository;
     private final PropertySharingRepository propertySharingRepository;
     private final UserRepository userRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
 
     @Autowired
     public PropertyService(PropertyRepository propertyRepository,
-                           PropertyValueRepository propertyValueRepository,
+                           AttributeValueRepository attributeValueRepository,
                            PropertySharingRepository propertySharingRepository,
                            UserRepository userRepository,
                            PropertyAttributeRepository propertyAttributeRepository) {
         this.propertyRepository = propertyRepository;
-        this.propertyValueRepository = propertyValueRepository;
+        this.attributeValueRepository = attributeValueRepository;
         this.propertySharingRepository = propertySharingRepository;
         this.userRepository = userRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
@@ -102,39 +102,39 @@ public class PropertyService {
         propertyRepository.deleteById(id);
     }
 
-    public PropertyValue setPropertyValue(Long propertyId, Long attributeId, Object value) {
+    public AttributeValue setAttributeValue(Long propertyId, Long attributeId, Object value) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
 
         PropertyAttribute attribute = propertyAttributeRepository.findById(attributeId)
                 .orElseThrow(() -> new EntityNotFoundException("Attribute not found with id: " + attributeId));
 
-        validatePropertyValue(attribute, value);
+        validateAttributeValue(attribute, value);
 
-        Optional<PropertyValue> existingValue = propertyValueRepository
+        Optional<AttributeValue> existingValue = attributeValueRepository
                 .findByPropertyIdAndAttributeId(propertyId, attributeId);
 
-        PropertyValue propertyValue = existingValue.orElse(new PropertyValue(property, attribute));
+        AttributeValue attributeValue = existingValue.orElse(new AttributeValue(property, attribute));
 
         // Set value based on attribute type
-        clearPropertyValueFields(propertyValue);
+        clearAttributeValueFields(attributeValue);
         switch (attribute.getDataType()) {
-            case TEXT, SINGLE_SELECT -> propertyValue.setTextValue((String) value);
-            case NUMBER -> propertyValue.setNumberValue((BigDecimal) value);
-            case BOOLEAN -> propertyValue.setBooleanValue((Boolean) value);
-            case MULTI_SELECT -> propertyValue.setMultiSelectValue((String) value);
+            case TEXT, SINGLE_SELECT -> attributeValue.setTextValue((String) value);
+            case NUMBER -> attributeValue.setNumberValue((BigDecimal) value);
+            case BOOLEAN -> attributeValue.setBooleanValue((Boolean) value);
+            case MULTI_SELECT -> attributeValue.setMultiSelectValue((String) value);
         }
 
-        return propertyValueRepository.save(propertyValue);
+        return attributeValueRepository.save(attributeValue);
     }
 
     @Transactional(readOnly = true)
-    public List<PropertyValue> getPropertyValues(Long propertyId) {
-        return propertyValueRepository.findByPropertyId(propertyId);
+    public List<AttributeValue> getAttributeValues(Long propertyId) {
+        return attributeValueRepository.findByPropertyId(propertyId);
     }
 
-    public void deletePropertyValue(Long propertyId, Long attributeId) {
-        propertyValueRepository.deleteByPropertyIdAndAttributeId(propertyId, attributeId);
+    public void deleteAttributeValue(Long propertyId, Long attributeId) {
+        attributeValueRepository.deleteByPropertyIdAndAttributeId(propertyId, attributeId);
     }
 
     public PropertySharing shareProperty(Long propertyId, Long sharedWithUserId, Long sharedByUserId) {
@@ -188,7 +188,7 @@ public class PropertyService {
         }
     }
 
-    private void validatePropertyValue(PropertyAttribute attribute, Object value) {
+    private void validateAttributeValue(PropertyAttribute attribute, Object value) {
         if (value == null && attribute.getIsRequired()) {
             throw new IllegalArgumentException("Value is required for attribute: " + attribute.getName());
         }
@@ -219,10 +219,10 @@ public class PropertyService {
         }
     }
 
-    private void clearPropertyValueFields(PropertyValue propertyValue) {
-        propertyValue.setTextValue(null);
-        propertyValue.setNumberValue(null);
-        propertyValue.setBooleanValue(null);
-        propertyValue.setMultiSelectValue(null);
+    private void clearAttributeValueFields(AttributeValue attributeValue) {
+        attributeValue.setTextValue(null);
+        attributeValue.setNumberValue(null);
+        attributeValue.setBooleanValue(null);
+        attributeValue.setMultiSelectValue(null);
     }
 }

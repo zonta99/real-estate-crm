@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class PropertyAttributeController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'BROKER', 'AGENT', 'ASSISTANT')")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<PropertyAttributeResponse>> getAllAttributes() {
         List<PropertyAttribute> attributes = propertyAttributeService.getAllAttributes();
         List<PropertyAttributeResponse> responses = attributes.stream()
@@ -46,6 +48,7 @@ public class PropertyAttributeController {
 
     @GetMapping("/searchable")
     @PreAuthorize("hasAnyRole('ADMIN', 'BROKER', 'AGENT', 'ASSISTANT')")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<PropertyAttributeResponse>> getSearchableAttributes() {
         List<PropertyAttribute> attributes = propertyAttributeService.getSearchableAttributes();
         List<PropertyAttributeResponse> responses = attributes.stream()
@@ -57,6 +60,7 @@ public class PropertyAttributeController {
 
     @GetMapping("/category/{category}")
     @PreAuthorize("hasAnyRole('ADMIN', 'BROKER', 'AGENT', 'ASSISTANT')")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<PropertyAttributeResponse>> getAttributesByCategory(@PathVariable PropertyCategory category) {
         List<PropertyAttribute> attributes = propertyAttributeService.getAttributesByCategory(category);
         List<PropertyAttributeResponse> responses = attributes.stream()
@@ -68,6 +72,7 @@ public class PropertyAttributeController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'BROKER', 'AGENT', 'ASSISTANT')")
+    @Transactional(readOnly = true)
     public ResponseEntity<PropertyAttributeResponse> getAttributeById(@PathVariable Long id) {
         PropertyAttribute attribute = propertyAttributeService.getAttributeById(id)
                 .orElseThrow(() -> new RuntimeException("Property attribute not found with id: " + id));
@@ -77,6 +82,7 @@ public class PropertyAttributeController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ResponseEntity<PropertyAttributeResponse> createAttribute(@Valid @RequestBody CreateAttributeRequest request) {
         PropertyAttribute attribute = new PropertyAttribute();
         attribute.setName(request.getName());
@@ -92,6 +98,7 @@ public class PropertyAttributeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
     public ResponseEntity<PropertyAttributeResponse> updateAttribute(
             @PathVariable Long id,
             @Valid @RequestBody UpdateAttributeRequest request) {

@@ -3,6 +3,7 @@ package com.realestatecrm.dto.property.response;
 import com.realestatecrm.enums.PropertyStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PropertyResponse {
     private Long id;
@@ -14,6 +15,8 @@ public class PropertyResponse {
     private PropertyStatus status;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
+    // Optional: included only for singular fetches
+    private List<AttributeValueResponse> attributeValues;
 
     public PropertyResponse(Long id, String title, String description, BigDecimal price,
                             Long agentId, String agentName, PropertyStatus status,
@@ -29,6 +32,14 @@ public class PropertyResponse {
         this.updatedDate = updatedDate;
     }
 
+    public PropertyResponse(Long id, String title, String description, BigDecimal price,
+                            Long agentId, String agentName, PropertyStatus status,
+                            LocalDateTime createdDate, LocalDateTime updatedDate,
+                            List<AttributeValueResponse> attributeValues) {
+        this(id, title, description, price, agentId, agentName, status, createdDate, updatedDate);
+        this.attributeValues = attributeValues;
+    }
+
     // Getters
     public Long getId() { return id; }
     public String getTitle() { return title; }
@@ -39,4 +50,5 @@ public class PropertyResponse {
     public PropertyStatus getStatus() { return status; }
     public LocalDateTime getCreatedDate() { return createdDate; }
     public LocalDateTime getUpdatedDate() { return updatedDate; }
+    public List<AttributeValueResponse> getAttributeValues() { return attributeValues; }
 }

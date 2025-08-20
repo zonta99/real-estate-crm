@@ -4,11 +4,12 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Entity
-@Table(name = "property_values",
+@Table(name = "attribute_value",
         uniqueConstraints = @UniqueConstraint(columnNames = {"property_id", "attribute_id"}))
-public class PropertyValue {
+public class AttributeValue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,35 +38,39 @@ public class PropertyValue {
     @Column(name = "multi_select_value", columnDefinition = "TEXT")
     private String multiSelectValue; // JSON array as string
 
-    // Constructors
-    public PropertyValue() {}
+    @Column(name = "date_value")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date dateValue;
 
-    public PropertyValue(Property property, PropertyAttribute attribute) {
+    // Constructors
+    public AttributeValue() {}
+
+    public AttributeValue(Property property, PropertyAttribute attribute) {
         this.property = property;
         this.attribute = attribute;
     }
 
     // Static factory methods for type-safe value creation
-    public static PropertyValue createTextValue(Property property, PropertyAttribute attribute, String value) {
-        PropertyValue pv = new PropertyValue(property, attribute);
+    public static AttributeValue createTextValue(Property property, PropertyAttribute attribute, String value) {
+        AttributeValue pv = new AttributeValue(property, attribute);
         pv.setTextValue(value);
         return pv;
     }
 
-    public static PropertyValue createNumberValue(Property property, PropertyAttribute attribute, BigDecimal value) {
-        PropertyValue pv = new PropertyValue(property, attribute);
+    public static AttributeValue createNumberValue(Property property, PropertyAttribute attribute, BigDecimal value) {
+        AttributeValue pv = new AttributeValue(property, attribute);
         pv.setNumberValue(value);
         return pv;
     }
 
-    public static PropertyValue createBooleanValue(Property property, PropertyAttribute attribute, Boolean value) {
-        PropertyValue pv = new PropertyValue(property, attribute);
+    public static AttributeValue createBooleanValue(Property property, PropertyAttribute attribute, Boolean value) {
+        AttributeValue pv = new AttributeValue(property, attribute);
         pv.setBooleanValue(value);
         return pv;
     }
 
-    public static PropertyValue createMultiSelectValue(Property property, PropertyAttribute attribute, String jsonValue) {
-        PropertyValue pv = new PropertyValue(property, attribute);
+    public static AttributeValue createMultiSelectValue(Property property, PropertyAttribute attribute, String jsonValue) {
+        AttributeValue pv = new AttributeValue(property, attribute);
         pv.setMultiSelectValue(jsonValue);
         return pv;
     }
@@ -92,6 +97,9 @@ public class PropertyValue {
     public String getMultiSelectValue() { return multiSelectValue; }
     public void setMultiSelectValue(String multiSelectValue) { this.multiSelectValue = multiSelectValue; }
 
+    public Date getDateValue() { return dateValue; }
+    public void setDateValue(Date dateValue) { this.dateValue = dateValue; }
+
     // Helper method to get the actual value based on attribute type
     public Object getValue() {
         return switch (attribute.getDataType()) {
@@ -99,15 +107,16 @@ public class PropertyValue {
             case NUMBER -> numberValue;
             case BOOLEAN -> booleanValue;
             case MULTI_SELECT -> multiSelectValue;
+            case DATE -> dateValue;
         };
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PropertyValue that)) return false;
-        return property != null ? property.equals(that.property) : that.property == null &&
-                attribute != null ? attribute.equals(that.attribute) : that.attribute == null;
+        if (!(o instanceof AttributeValue that)) return false;
+        return (property != null ? property.equals(that.property) : that.property == null) &&
+               (attribute != null ? attribute.equals(that.attribute) : that.attribute == null);
     }
 
     @Override

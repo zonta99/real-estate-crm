@@ -1,6 +1,6 @@
 package com.realestatecrm.dto.property.response;
 
-public class PropertyValueResponse {
+public class AttributeValueResponse {
     private Long id;
     private Long propertyId;
     private Long attributeId;
@@ -8,8 +8,8 @@ public class PropertyValueResponse {
     private String dataType;
     private Object value;
 
-    public PropertyValueResponse(Long id, Long propertyId, Long attributeId, String attributeName,
-                                 Object dataType, Object value) {
+    public AttributeValueResponse(Long id, Long propertyId, Long attributeId, String attributeName,
+                                  Object dataType, Object value) {
         this.id = id;
         this.propertyId = propertyId;
         this.attributeId = attributeId;

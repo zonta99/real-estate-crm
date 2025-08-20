@@ -59,7 +59,7 @@ public class PropertyAttribute {
     private List<PropertyAttributeOption> options;
 
     @OneToMany(mappedBy = "attribute", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<PropertyValue> propertyValues;
+    private List<AttributeValue> attributeValues;
 
     @OneToMany(mappedBy = "attribute", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<CustomerSearchCriteria> customerSearchCriteria;
@@ -104,8 +104,8 @@ public class PropertyAttribute {
     public List<PropertyAttributeOption> getOptions() { return options; }
     public void setOptions(List<PropertyAttributeOption> options) { this.options = options; }
 
-    public List<PropertyValue> getPropertyValues() { return propertyValues; }
-    public void setPropertyValues(List<PropertyValue> propertyValues) { this.propertyValues = propertyValues; }
+    public List<AttributeValue> getAttributeValues() { return attributeValues; }
+    public void setAttributeValues(List<AttributeValue> attributeValues) { this.attributeValues = attributeValues; }
 
     public List<CustomerSearchCriteria> getCustomerSearchCriteria() { return customerSearchCriteria; }
     public void setCustomerSearchCriteria(List<CustomerSearchCriteria> customerSearchCriteria) {

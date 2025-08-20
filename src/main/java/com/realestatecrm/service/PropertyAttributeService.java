@@ -111,9 +111,9 @@ public class PropertyAttributeService {
                 .orElseThrow(() -> new EntityNotFoundException("Attribute not found with id: " + id));
 
         // Check if attribute is in use by any properties
-        if (!attribute.getPropertyValues().isEmpty()) {
+        if (!attribute.getAttributeValues().isEmpty()) {
             throw new IllegalArgumentException("Cannot delete attribute '" + attribute.getName() +
-                    "' because it is used by " + attribute.getPropertyValues().size() + " properties");
+                    "' because it is used by " + attribute.getAttributeValues().size() + " properties");
         }
 
         // Check if attribute is used in customer search criteria

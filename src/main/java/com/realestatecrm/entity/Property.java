@@ -53,7 +53,7 @@ public class Property {
 
     // Relationships
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<PropertyValue> propertyValues;
+    private List<AttributeValue> attributeValues;
 
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PropertySharing> propertySharing;
@@ -92,8 +92,8 @@ public class Property {
     public LocalDateTime getUpdatedDate() { return updatedDate; }
     public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
 
-    public List<PropertyValue> getPropertyValues() { return propertyValues; }
-    public void setPropertyValues(List<PropertyValue> propertyValues) { this.propertyValues = propertyValues; }
+    public List<AttributeValue> getAttributeValues() { return attributeValues; }
+    public void setAttributeValues(List<AttributeValue> attributeValues) { this.attributeValues = attributeValues; }
 
     public List<PropertySharing> getPropertySharing() { return propertySharing; }
     public void setPropertySharing(List<PropertySharing> propertySharing) { this.propertySharing = propertySharing; }

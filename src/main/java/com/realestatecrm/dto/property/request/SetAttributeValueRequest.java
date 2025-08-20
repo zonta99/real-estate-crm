@@ -2,7 +2,7 @@ package com.realestatecrm.dto.property.request;
 
 import jakarta.validation.constraints.NotNull;
 
-public class SetPropertyValueRequest {
+public class SetAttributeValueRequest {
     @NotNull
     private Long attributeId;
     private Object value;

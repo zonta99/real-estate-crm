@@ -2,12 +2,12 @@ package com.realestatecrm.controller;
 
 import com.realestatecrm.dto.common.MessageResponse;
 import com.realestatecrm.dto.property.request.CreatePropertyRequest;
-import com.realestatecrm.dto.property.request.SetPropertyValueRequest;
+import com.realestatecrm.dto.property.request.SetAttributeValueRequest;
 import com.realestatecrm.dto.property.request.SharePropertyRequest;
 import com.realestatecrm.dto.property.request.UpdatePropertyRequest;
 import com.realestatecrm.dto.property.response.PropertyResponse;
 import com.realestatecrm.dto.property.response.PropertySharingResponse;
-import com.realestatecrm.dto.property.response.PropertyValueResponse;
+import com.realestatecrm.dto.property.response.AttributeValueResponse;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.PropertyStatus;
 import com.realestatecrm.service.PropertyService;
@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -73,11 +74,12 @@ public class PropertyController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    @Transactional(readOnly = true)
     public ResponseEntity<PropertyResponse> getPropertyById(@PathVariable Long id) {
         Property property = propertyService.getPropertyById(id)
                 .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
 
-        return ResponseEntity.ok(convertToPropertyResponse(property));
+        return ResponseEntity.ok(convertToPropertyResponseWithAttributes(property));
     }
 
     @PostMapping
@@ -125,25 +127,27 @@ public class PropertyController {
 
     @PostMapping("/{id}/values")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<PropertyValueResponse> setPropertyValue(
+    @Transactional
+    public ResponseEntity<AttributeValueResponse> setAttributeValue(
             @PathVariable Long id,
-            @Valid @RequestBody SetPropertyValueRequest request) {
+            @Valid @RequestBody SetAttributeValueRequest request) {
 
-        PropertyValue value = propertyService.setPropertyValue(
+        AttributeValue value = propertyService.setAttributeValue(
                 id,
                 request.getAttributeId(),
                 request.getValue()
         );
 
-        return ResponseEntity.ok(convertToPropertyValueResponse(value));
+        return ResponseEntity.ok(convertToAttributeValueResponse(value));
     }
 
     @GetMapping("/{id}/values")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<List<PropertyValueResponse>> getPropertyValues(@PathVariable Long id) {
-        List<PropertyValue> values = propertyService.getPropertyValues(id);
-        List<PropertyValueResponse> responses = values.stream()
-                .map(this::convertToPropertyValueResponse)
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<AttributeValueResponse>> getAttributeValues(@PathVariable Long id) {
+        List<AttributeValue> values = propertyService.getAttributeValues(id);
+        List<AttributeValueResponse> responses = values.stream()
+                .map(this::convertToAttributeValueResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -151,12 +155,12 @@ public class PropertyController {
 
     @DeleteMapping("/{id}/values/{attributeId}")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<MessageResponse> deletePropertyValue(
+    public ResponseEntity<MessageResponse> deleteAttributeValue(
             @PathVariable Long id,
             @PathVariable Long attributeId) {
 
-        propertyService.deletePropertyValue(id, attributeId);
-        return ResponseEntity.ok(new MessageResponse("Property value deleted successfully"));
+        propertyService.deleteAttributeValue(id, attributeId);
+        return ResponseEntity.ok(new MessageResponse("Attribute value deleted successfully"));
     }
 
     @PostMapping("/{id}/share")
@@ -236,8 +240,28 @@ public class PropertyController {
         );
     }
 
-    private PropertyValueResponse convertToPropertyValueResponse(PropertyValue value) {
-        return new PropertyValueResponse(
+    private PropertyResponse convertToPropertyResponseWithAttributes(Property property) {
+        List<AttributeValue> values = propertyService.getAttributeValues(property.getId());
+        List<AttributeValueResponse> valueResponses = values.stream()
+                .map(this::convertToAttributeValueResponse)
+                .collect(Collectors.toList());
+
+        return new PropertyResponse(
+                property.getId(),
+                property.getTitle(),
+                property.getDescription(),
+                property.getPrice(),
+                property.getAgent().getId(),
+                property.getAgent().getFullName(),
+                property.getStatus(),
+                property.getCreatedDate(),
+                property.getUpdatedDate(),
+                valueResponses
+        );
+    }
+
+    private AttributeValueResponse convertToAttributeValueResponse(AttributeValue value) {
+        return new AttributeValueResponse(
                 value.getId(),
                 value.getProperty().getId(),
                 value.getAttribute().getId(),
