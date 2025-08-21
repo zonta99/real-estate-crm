@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,7 +121,7 @@ public class PropertyService {
         clearAttributeValueFields(attributeValue);
         switch (attribute.getDataType()) {
             case TEXT, SINGLE_SELECT -> attributeValue.setTextValue((String) value);
-            case NUMBER -> attributeValue.setNumberValue((BigDecimal) value);
+            case NUMBER -> attributeValue.setNumberValue(coerceToBigDecimal(value));
             case BOOLEAN -> attributeValue.setBooleanValue((Boolean) value);
             case MULTI_SELECT -> attributeValue.setMultiSelectValue((String) value);
         }
@@ -201,9 +202,14 @@ public class PropertyService {
                     }
                 }
                 case NUMBER -> {
-                    if (!(value instanceof BigDecimal)) {
-                        throw new IllegalArgumentException("Expected BigDecimal value for NUMBER type");
+                    // Be flexible: accept BigDecimal, any Number (Integer, Long, Double, etc.), or a numeric String
+                    if (!(value instanceof BigDecimal) &&
+                        !(value instanceof Number) &&
+                        !(value instanceof String && isNumericString((String) value))) {
+                        throw new IllegalArgumentException("Expected numeric value (BigDecimal/Number/String) for NUMBER type");
                     }
+                    // Additionally, try coercion to validate convertibility
+                    coerceToBigDecimal(value); // will throw if not convertible
                 }
                 case BOOLEAN -> {
                     if (!(value instanceof Boolean)) {
@@ -217,6 +223,35 @@ public class PropertyService {
                 }
             }
         }
+    }
+
+    private BigDecimal coerceToBigDecimal(Object value) {
+        if (value == null) return null;
+        BigDecimal bd;
+        if (value instanceof BigDecimal b) {
+            bd = b;
+        } else if (value instanceof Number n) {
+            // Use String constructor to preserve exact representation
+            bd = new BigDecimal(n.toString());
+        } else if (value instanceof String s) {
+            String trimmed = s.trim();
+            if (!isNumericString(trimmed)) {
+                throw new IllegalArgumentException("Invalid numeric string: '" + s + "'");
+            }
+            bd = new BigDecimal(trimmed);
+        } else {
+            throw new IllegalArgumentException("Unsupported numeric value type: " + value.getClass().getSimpleName());
+        }
+        // Normalize to the DB scale (2) with HALF_UP rounding to avoid persistence issues
+        return bd.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private boolean isNumericString(String s) {
+        if (s == null) return false;
+        String str = s.trim();
+        if (str.isEmpty()) return false;
+        // Basic check for integer/decimal with optional sign
+        return str.matches("[+-]?\\d+(\\.\\d+)?");
     }
 
     private void clearAttributeValueFields(AttributeValue attributeValue) {

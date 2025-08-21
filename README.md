@@ -6,6 +6,7 @@ This repository contains a Spring Boot backend for a Real Estate CRM.
 - Health: /actuator/health
 
 Guides for frontend developers:
+- Property CRUD and Attributes — API Usage Guide: docs/property-crud.md
 - Property Attributes — Frontend Integration Guide: docs/property-attributes.md
 
-See the docs file for how to render, validate, and submit dynamic property attributes efficiently.
+See the docs files for how to manage properties and render, validate, and submit dynamic property attributes efficiently.

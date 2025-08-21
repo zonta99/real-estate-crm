@@ -154,7 +154,8 @@ public class DataLoader implements CommandLineRunner {
         if (attribute.getDataType() == PropertyDataType.TEXT || attribute.getDataType() == PropertyDataType.SINGLE_SELECT) {
             av.setTextValue((String) value);
         } else if (attribute.getDataType() == PropertyDataType.NUMBER) {
-            av.setNumberValue((BigDecimal) value);
+            BigDecimal bd = (value instanceof BigDecimal) ? (BigDecimal) value : new BigDecimal(value.toString());
+            av.setNumberValue(bd.setScale(2, java.math.RoundingMode.HALF_UP));
         } else if (attribute.getDataType() == PropertyDataType.BOOLEAN) {
             av.setBooleanValue((Boolean) value);
         } else if (attribute.getDataType() == PropertyDataType.MULTI_SELECT) {
