@@ -40,17 +40,20 @@ public class PropertyService {
 
     @Transactional(readOnly = true)
     public List<Property> getAllProperties() {
-        return propertyRepository.findAll();
+        // LAZY FIX: Use findAllWithAgent to eagerly fetch agent relationship
+        return propertyRepository.findAllWithAgent();
     }
 
     @Transactional(readOnly = true)
     public Page<Property> getAllProperties(Pageable pageable) {
-        return propertyRepository.findAll(pageable);
+        // LAZY FIX: Use findAllWithAgent to eagerly fetch agent relationship
+        return propertyRepository.findAllWithAgent(pageable);
     }
 
     @Transactional(readOnly = true)
     public Optional<Property> getPropertyById(Long id) {
-        return propertyRepository.findById(id);
+        // LAZY FIX: Use findByIdWithAgent to eagerly fetch agent relationship
+        return propertyRepository.findByIdWithAgent(id);
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +88,8 @@ public class PropertyService {
     }
 
     public Property updateProperty(Long id, Property updatedProperty) {
-        Property existingProperty = propertyRepository.findById(id)
+        // LAZY FIX: Use findByIdWithAgent when we might access agent later
+        Property existingProperty = propertyRepository.findByIdWithAgent(id)
                 .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + id));
 
         existingProperty.setTitle(updatedProperty.getTitle());
@@ -104,7 +108,8 @@ public class PropertyService {
     }
 
     public AttributeValue setAttributeValue(Long propertyId, Long attributeId, Object value) {
-        Property property = propertyRepository.findById(propertyId)
+        // LAZY FIX: Use findByIdWithAgent when we might access agent later
+        Property property = propertyRepository.findByIdWithAgent(propertyId)
                 .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
 
         PropertyAttribute attribute = propertyAttributeRepository.findById(attributeId)
@@ -139,7 +144,8 @@ public class PropertyService {
     }
 
     public PropertySharing shareProperty(Long propertyId, Long sharedWithUserId, Long sharedByUserId) {
-        Property property = propertyRepository.findById(propertyId)
+        // LAZY FIX: Use findByIdWithAgent since we access property.getAgent() later (line 156)
+        Property property = propertyRepository.findByIdWithAgent(propertyId)
                 .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + propertyId));
 
         User sharedWithUser = userRepository.findById(sharedWithUserId)
