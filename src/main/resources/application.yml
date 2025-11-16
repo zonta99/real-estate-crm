@@ -1,10 +1,7 @@
 # application.yml - Main configuration
-server:
-  port: 8080
-  servlet:
-    context-path: /
-
 spring:
+  application:
+    name: Real Estate CRM
   profiles:
     active: dev
   
@@ -26,12 +23,18 @@ spring:
   # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false  # SECURITY: Disable OSIV to prevent lazy loading issues
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: update  # CHANGED: use 'update' in dev, 'validate' in prod
+    show-sql: false  # SECURITY: Disabled to prevent sensitive data in logs
     properties:
       hibernate:
         format_sql: true
+        # Enable batch inserts for better performance
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
     # This ensures data.sql runs after schema creation
     defer-datasource-initialization: true
   
@@ -45,21 +48,44 @@ spring:
   security:
     require-ssl: false
 
+server:
+  port: 8080
+  address: 0.0.0.0  # Listen on all interfaces
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Admin User Configuration
+# SECURITY: MUST be set via environment variables
+admin:
+  username: ${ADMIN_USERNAME:admin}
+  password: ${ADMIN_PASSWORD:}  # REQUIRED: Set strong password!
+
 # JWT Configuration
 # SECURITY: Set JWT_SECRET environment variable with a strong random secret (min 256 bits)
 # Generate with: openssl rand -base64 64
 jwt:
   secret: ${JWT_SECRET:}
   expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
 
-# Logging Configuration
+# CORS Configuration
+# SECURITY: Never use "*" in production!
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:4200}
+
+# Logging Configuration (Development)
+# SECURITY: Use INFO/WARN in production (see application-prod.yml)
 logging:
   level:
-    com.realestatecrm: DEBUG
-    org.springframework.security: DEBUG
+    com.realestatecrm: INFO  # Changed from DEBUG
+    org.springframework.security: INFO  # SECURITY: Changed from DEBUG to prevent token exposure
+    org.springframework.web: INFO
     root: INFO
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 # Management Endpoints
 management:

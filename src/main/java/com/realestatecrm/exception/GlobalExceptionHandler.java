@@ -3,6 +3,8 @@ package com.realestatecrm.exception;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Handle validation errors from @Valid annotations
@@ -192,12 +196,13 @@ public class GlobalExceptionHandler {
 
     /**
      * Handle all other unhandled exceptions
+     * SECURITY FIX: Use proper logging instead of System.err and printStackTrace
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
-        // Log the full exception for debugging
-        System.err.println("Unhandled exception: " + ex.getClass().getName() + " - " + ex.getMessage());
-        ex.printStackTrace();
+        // SECURITY: Log full exception at ERROR level for debugging
+        // Stack trace is logged by SLF4J automatically
+        logger.error("Unhandled exception: {} - {}", ex.getClass().getName(), ex.getMessage(), ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
