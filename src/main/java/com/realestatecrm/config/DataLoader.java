@@ -7,6 +7,7 @@ import com.realestatecrm.enums.Role;
 import com.realestatecrm.enums.UserStatus;
 import com.realestatecrm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,12 @@ public class DataLoader implements CommandLineRunner {
     private final AttributeValueRepository attributeValueRepository;
     private final PropertySharingRepository propertySharingRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${admin.password:}")
+    private String adminPassword;
 
     @Autowired
     public DataLoader(UserRepository userRepository,
@@ -59,11 +66,20 @@ public class DataLoader implements CommandLineRunner {
     }
 
     private void loadInitialData() {
-        // Create admin user
+        // Create admin user from environment variables
         System.out.println("Creating admin user...");
+
+        // SECURITY: Validate admin password is set and strong
+        if (adminPassword == null || adminPassword.isEmpty()) {
+            throw new IllegalStateException("ADMIN_PASSWORD environment variable must be set. Use a strong password!");
+        }
+        if (adminPassword.length() < 12) {
+            System.err.println("WARNING: Admin password is weak! Use at least 12 characters.");
+        }
+
         User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setUsername(adminUsername);
+        admin.setPassword(passwordEncoder.encode(adminPassword));
         admin.setEmail("admin@realestatecrm.com");
         admin.setFirstName("System");
         admin.setLastName("Administrator");

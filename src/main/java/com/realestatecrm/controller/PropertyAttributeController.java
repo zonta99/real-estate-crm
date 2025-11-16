@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/property-attributes")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class PropertyAttributeController {
 
     private final PropertyAttributeService propertyAttributeService;
