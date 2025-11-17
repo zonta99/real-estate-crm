@@ -49,17 +49,20 @@ public class CustomerService {
 
     @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+        // LAZY FIX: Use findAllWithAgent to eagerly fetch agent relationship
+        return customerRepository.findAllWithAgent();
     }
 
     @Transactional(readOnly = true)
     public Page<Customer> getAllCustomers(Pageable pageable) {
-        return customerRepository.findAll(pageable);
+        // LAZY FIX: Use findAllWithAgent to eagerly fetch agent relationship
+        return customerRepository.findAllWithAgent(pageable);
     }
 
     @Transactional(readOnly = true)
     public Optional<Customer> getCustomerById(Long id) {
-        return customerRepository.findById(id);
+        // LAZY FIX: Use findByIdWithAgent to eagerly fetch agent relationship
+        return customerRepository.findByIdWithAgent(id);
     }
 
     @Transactional(readOnly = true)
