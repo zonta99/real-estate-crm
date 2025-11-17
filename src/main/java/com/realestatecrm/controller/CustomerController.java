@@ -2,15 +2,17 @@ package com.realestatecrm.controller;
 
 import com.realestatecrm.dto.common.MessageResponse;
 import com.realestatecrm.dto.customer.request.CreateCustomerRequest;
+import com.realestatecrm.dto.customer.request.CreateCustomerInteractionRequest;
+import com.realestatecrm.dto.customer.request.CreateCustomerNoteRequest;
 import com.realestatecrm.dto.customer.request.SetSearchCriteriaRequest;
 import com.realestatecrm.dto.customer.request.UpdateCustomerRequest;
+import com.realestatecrm.dto.customer.response.CustomerInteractionResponse;
+import com.realestatecrm.dto.customer.response.CustomerNoteResponse;
 import com.realestatecrm.dto.customer.response.CustomerResponse;
 import com.realestatecrm.dto.customer.response.CustomerSearchCriteriaResponse;
 import com.realestatecrm.dto.customer.response.PropertyMatchResponse;
-import com.realestatecrm.entity.Customer;
-import com.realestatecrm.entity.CustomerSearchCriteria;
-import com.realestatecrm.entity.Property;
-import com.realestatecrm.entity.User;
+import com.realestatecrm.entity.*;
+import com.realestatecrm.enums.InteractionType;
 import com.realestatecrm.enums.CustomerStatus;
 import com.realestatecrm.service.CustomerService;
 import com.realestatecrm.service.UserService;
@@ -176,7 +178,7 @@ public class CustomerController {
         return ResponseEntity.ok(new MessageResponse("Search criteria deleted successfully"));
     }
 
-    @GetMapping("/{id}/matching-properties")
+    @GetMapping({"/{id}/matching-properties", "/{id}/matches"})
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<List<PropertyMatchResponse>> getMatchingProperties(@PathVariable Long id) {
         List<Property> matchingProperties = customerService.findMatchingProperties(id);
@@ -259,6 +261,130 @@ public class CustomerController {
                 property.getPrice(),
                 property.getAgent().getFullName(),
                 property.getStatus().toString()
+        );
+    }
+
+    // Customer Notes Endpoints
+    @PostMapping("/{id}/notes")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<CustomerNoteResponse> addCustomerNote(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody CreateCustomerNoteRequest request) {
+
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        CustomerNote note = customerService.createCustomerNote(id, currentUser, request.getContent());
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToCustomerNoteResponse(note));
+    }
+
+    @GetMapping("/{id}/notes")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<List<CustomerNoteResponse>> getCustomerNotes(@PathVariable Long id) {
+        List<CustomerNote> notes = customerService.getCustomerNotes(id);
+        List<CustomerNoteResponse> responses = notes.stream()
+                .map(this::convertToCustomerNoteResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @DeleteMapping("/{id}/notes/{noteId}")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<MessageResponse> deleteCustomerNote(
+            @PathVariable Long id,
+            @PathVariable Long noteId) {
+
+        customerService.deleteCustomerNote(noteId);
+        return ResponseEntity.ok(new MessageResponse("Customer note deleted successfully"));
+    }
+
+    // Customer Interactions Endpoints
+    @PostMapping("/{id}/interactions")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<CustomerInteractionResponse> createCustomerInteraction(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody CreateCustomerInteractionRequest request) {
+
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        CustomerInteraction interaction = new CustomerInteraction();
+        interaction.setType(request.getType());
+        interaction.setSubject(request.getSubject());
+        interaction.setNotes(request.getNotes());
+        interaction.setInteractionDate(request.getInteractionDate());
+        interaction.setDurationMinutes(request.getDurationMinutes());
+
+        if (request.getRelatedPropertyId() != null) {
+            Property property = new Property();
+            property.setId(request.getRelatedPropertyId());
+            interaction.setRelatedProperty(property);
+        }
+
+        CustomerInteraction createdInteraction = customerService.createCustomerInteraction(id, currentUser, interaction);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToCustomerInteractionResponse(createdInteraction));
+    }
+
+    @GetMapping("/{id}/interactions")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<List<CustomerInteractionResponse>> getCustomerInteractions(@PathVariable Long id) {
+        List<CustomerInteraction> interactions = customerService.getCustomerInteractions(id);
+        List<CustomerInteractionResponse> responses = interactions.stream()
+                .map(this::convertToCustomerInteractionResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @DeleteMapping("/{id}/interactions/{interactionId}")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<MessageResponse> deleteCustomerInteraction(
+            @PathVariable Long id,
+            @PathVariable Long interactionId) {
+
+        customerService.deleteCustomerInteraction(interactionId);
+        return ResponseEntity.ok(new MessageResponse("Customer interaction deleted successfully"));
+    }
+
+    // Converter Methods
+    private CustomerNoteResponse convertToCustomerNoteResponse(CustomerNote note) {
+        return new CustomerNoteResponse(
+                note.getId(),
+                note.getCustomer().getId(),
+                note.getCustomer().getFullName(),
+                note.getCreatedBy().getId(),
+                note.getCreatedBy().getFullName(),
+                note.getContent(),
+                note.getCreatedDate()
+        );
+    }
+
+    private CustomerInteractionResponse convertToCustomerInteractionResponse(CustomerInteraction interaction) {
+        String relatedPropertyTitle = null;
+        Long relatedPropertyId = null;
+
+        if (interaction.getRelatedProperty() != null) {
+            relatedPropertyId = interaction.getRelatedProperty().getId();
+            relatedPropertyTitle = interaction.getRelatedProperty().getTitle();
+        }
+
+        return new CustomerInteractionResponse(
+                interaction.getId(),
+                interaction.getCustomer().getId(),
+                interaction.getCustomer().getFullName(),
+                interaction.getUser().getId(),
+                interaction.getUser().getFullName(),
+                interaction.getType(),
+                interaction.getSubject(),
+                interaction.getNotes(),
+                interaction.getInteractionDate(),
+                interaction.getDurationMinutes(),
+                relatedPropertyId,
+                relatedPropertyTitle,
+                interaction.getCreatedDate()
         );
     }
 }

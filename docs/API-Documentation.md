@@ -970,6 +970,280 @@ Find properties matching customer's search criteria.
 
 ---
 
+### Add Customer Note
+
+Add a new note to a customer's record.
+
+**Endpoint**: `POST /api/customers/{id}/notes`
+**Authentication**: Required (AGENT, BROKER, ADMIN)
+
+**Request Body**:
+```json
+{
+  "content": "Customer called to inquire about properties in downtown area. Very interested in modern condos."
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "id": 1,
+  "customerId": 5,
+  "customerName": "Michael Johnson",
+  "createdByUserId": 2,
+  "createdByUserName": "Alice Agent",
+  "content": "Customer called to inquire about properties in downtown area. Very interested in modern condos.",
+  "createdDate": "2025-01-15T14:30:00"
+}
+```
+
+**TypeScript Example**:
+```typescript
+interface CreateCustomerNoteRequest {
+  content: string;
+}
+
+interface CustomerNoteResponse {
+  id: number;
+  customerId: number;
+  customerName: string;
+  createdByUserId: number;
+  createdByUserName: string;
+  content: string;
+  createdDate: string;
+}
+
+async function addCustomerNote(customerId: number, content: string): Promise<CustomerNoteResponse> {
+  const token = sessionStorage.getItem('accessToken');
+
+  const response = await fetch(`http://localhost:8080/api/customers/${customerId}/notes`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ content })
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to add customer note');
+  }
+
+  return await response.json();
+}
+```
+
+---
+
+### Get Customer Notes
+
+Retrieve all notes for a specific customer.
+
+**Endpoint**: `GET /api/customers/{id}/notes`
+**Authentication**: Required (AGENT, BROKER, ADMIN)
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "customerId": 5,
+    "customerName": "Michael Johnson",
+    "createdByUserId": 2,
+    "createdByUserName": "Alice Agent",
+    "content": "Customer called to inquire about properties in downtown area.",
+    "createdDate": "2025-01-15T14:30:00"
+  },
+  {
+    "id": 2,
+    "customerId": 5,
+    "customerName": "Michael Johnson",
+    "createdByUserId": 3,
+    "createdByUserName": "Bob Broker",
+    "content": "Scheduled property viewing for next Tuesday.",
+    "createdDate": "2025-01-16T09:15:00"
+  }
+]
+```
+
+---
+
+### Delete Customer Note
+
+Delete a specific note from a customer's record.
+
+**Endpoint**: `DELETE /api/customers/{id}/notes/{noteId}`
+**Authentication**: Required (AGENT, BROKER, ADMIN)
+
+**Response** (200 OK):
+```json
+{
+  "message": "Customer note deleted successfully"
+}
+```
+
+---
+
+### Create Customer Interaction
+
+Log an interaction with a customer (phone call, email, meeting, etc.).
+
+**Endpoint**: `POST /api/customers/{id}/interactions`
+**Authentication**: Required (AGENT, BROKER, ADMIN)
+
+**Request Body**:
+```json
+{
+  "type": "PHONE_CALL",
+  "subject": "Follow-up call regarding property viewing",
+  "notes": "Customer confirmed interest in 3 properties. Will visit on Saturday.",
+  "interactionDate": "2025-01-15T10:30:00",
+  "durationMinutes": 15,
+  "relatedPropertyId": 1
+}
+```
+
+**Interaction Types**:
+- `PHONE_CALL` - Phone conversation
+- `EMAIL` - Email communication
+- `MEETING` - In-person meeting
+- `PROPERTY_VIEWING` - Property showing
+- `SMS` - Text message
+- `VIDEO_CALL` - Video conference
+- `OTHER` - Other interaction type
+
+**Response** (201 Created):
+```json
+{
+  "id": 1,
+  "customerId": 5,
+  "customerName": "Michael Johnson",
+  "userId": 2,
+  "userName": "Alice Agent",
+  "type": "PHONE_CALL",
+  "subject": "Follow-up call regarding property viewing",
+  "notes": "Customer confirmed interest in 3 properties. Will visit on Saturday.",
+  "interactionDate": "2025-01-15T10:30:00",
+  "durationMinutes": 15,
+  "relatedPropertyId": 1,
+  "relatedPropertyTitle": "Cozy Family Home",
+  "createdDate": "2025-01-15T10:35:00"
+}
+```
+
+**TypeScript Example**:
+```typescript
+interface CreateCustomerInteractionRequest {
+  type: 'PHONE_CALL' | 'EMAIL' | 'MEETING' | 'PROPERTY_VIEWING' | 'SMS' | 'VIDEO_CALL' | 'OTHER';
+  subject: string;
+  notes?: string;
+  interactionDate: string; // ISO 8601 format
+  durationMinutes?: number;
+  relatedPropertyId?: number;
+}
+
+interface CustomerInteractionResponse {
+  id: number;
+  customerId: number;
+  customerName: string;
+  userId: number;
+  userName: string;
+  type: string;
+  subject: string;
+  notes: string | null;
+  interactionDate: string;
+  durationMinutes: number | null;
+  relatedPropertyId: number | null;
+  relatedPropertyTitle: string | null;
+  createdDate: string;
+}
+
+async function createCustomerInteraction(
+  customerId: number,
+  interaction: CreateCustomerInteractionRequest
+): Promise<CustomerInteractionResponse> {
+  const token = sessionStorage.getItem('accessToken');
+
+  const response = await fetch(`http://localhost:8080/api/customers/${customerId}/interactions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(interaction)
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create customer interaction');
+  }
+
+  return await response.json();
+}
+```
+
+---
+
+### Get Customer Interaction History
+
+Retrieve all interactions for a specific customer.
+
+**Endpoint**: `GET /api/customers/{id}/interactions`
+**Authentication**: Required (AGENT, BROKER, ADMIN)
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "customerId": 5,
+    "customerName": "Michael Johnson",
+    "userId": 2,
+    "userName": "Alice Agent",
+    "type": "PHONE_CALL",
+    "subject": "Initial contact",
+    "notes": "Customer looking for 3-bedroom homes",
+    "interactionDate": "2025-01-10T14:00:00",
+    "durationMinutes": 20,
+    "relatedPropertyId": null,
+    "relatedPropertyTitle": null,
+    "createdDate": "2025-01-10T14:05:00"
+  },
+  {
+    "id": 2,
+    "customerId": 5,
+    "customerName": "Michael Johnson",
+    "userId": 2,
+    "userName": "Alice Agent",
+    "type": "PROPERTY_VIEWING",
+    "subject": "Property viewing at Cozy Family Home",
+    "notes": "Customer loved the kitchen and backyard",
+    "interactionDate": "2025-01-12T15:00:00",
+    "durationMinutes": 60,
+    "relatedPropertyId": 1,
+    "relatedPropertyTitle": "Cozy Family Home",
+    "createdDate": "2025-01-12T16:05:00"
+  }
+]
+```
+
+---
+
+### Delete Customer Interaction
+
+Delete a specific interaction from a customer's history.
+
+**Endpoint**: `DELETE /api/customers/{id}/interactions/{interactionId}`
+**Authentication**: Required (AGENT, BROKER, ADMIN)
+
+**Response** (200 OK):
+```json
+{
+  "message": "Customer interaction deleted successfully"
+}
+```
+
+---
+
 ## Property Attributes
 
 ### List All Attributes
