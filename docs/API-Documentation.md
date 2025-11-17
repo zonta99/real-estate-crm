@@ -506,9 +506,33 @@ async function getProperties(
 
 ### Get Property by ID
 
-Get details of a specific property with all attributes.
+Get basic details of a specific property (without attributes for better performance).
 
 **Endpoint**: `GET /api/properties/{id}`
+**Authentication**: Required
+
+**Response** (200 OK):
+```json
+{
+  "id": 1,
+  "title": "Cozy Family Home",
+  "description": "3-bed, 2-bath cozy home near parks and schools.",
+  "price": 350000.00,
+  "agentId": 2,
+  "agentName": "Alice Agent",
+  "status": "ACTIVE",
+  "createdDate": "2025-01-10T09:00:00",
+  "updatedDate": "2025-01-15T10:30:00"
+}
+```
+
+---
+
+### Get Property by ID with Attributes
+
+Get complete details of a specific property including all dynamic attributes.
+
+**Endpoint**: `GET /api/properties/{id}/with-attributes`
 **Authentication**: Required
 
 **Response** (200 OK):
@@ -549,6 +573,26 @@ Get details of a specific property with all attributes.
       "value": true
     }
   ]
+}
+```
+
+**TypeScript Example**:
+```typescript
+async function getPropertyWithAttributes(id: number): Promise<Property> {
+  const token = sessionStorage.getItem('accessToken');
+
+  const response = await fetch(
+    `http://localhost:8080/api/properties/${id}/with-attributes`,
+    {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch property: ${response.statusText}`);
+  }
+
+  return await response.json();
 }
 ```
 
