@@ -7,6 +7,8 @@ import com.realestatecrm.enums.PropertyDataType;
 import com.realestatecrm.repository.PropertyAttributeRepository;
 import com.realestatecrm.repository.PropertyAttributeOptionRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class PropertyAttributeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PropertyAttributeService.class);
 
     private final PropertyAttributeRepository propertyAttributeRepository;
     private final PropertyAttributeOptionRepository propertyAttributeOptionRepository;
@@ -205,8 +209,8 @@ public class PropertyAttributeService {
     private void validateDataTypeChange(PropertyAttribute existing, PropertyDataType newDataType) {
         // In production, you would implement proper data migration logic here
         // For now, we'll allow it but log a warning
-        System.out.println("WARNING: Changing data type for attribute '" + existing.getName() +
-                "' from " + existing.getDataType() + " to " + newDataType +
-                ". Existing property values may become incompatible.");
+        logger.warn("DATA TYPE CHANGE: Attribute '{}' data type changing from {} to {}. " +
+                "Existing property values may become incompatible.",
+                existing.getName(), existing.getDataType(), newDataType);
     }
 }

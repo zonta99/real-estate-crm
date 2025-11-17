@@ -6,7 +6,10 @@ import com.realestatecrm.enums.PropertyDataType;
 import com.realestatecrm.enums.Role;
 import com.realestatecrm.enums.UserStatus;
 import com.realestatecrm.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -17,6 +20,8 @@ import java.util.List;
 @Component
 public class DataLoader implements CommandLineRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
+
     private final UserRepository userRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
     private final PropertyAttributeOptionRepository propertyAttributeOptionRepository;
@@ -24,6 +29,12 @@ public class DataLoader implements CommandLineRunner {
     private final AttributeValueRepository attributeValueRepository;
     private final PropertySharingRepository propertySharingRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${admin.password:}")
+    private String adminPassword;
 
     @Autowired
     public DataLoader(UserRepository userRepository,
@@ -44,36 +55,45 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("=== DataLoader starting ===");
+        logger.info("=== DataLoader starting ===");
 
         // Only load data if the database is empty
         if (userRepository.count() == 0) {
-            System.out.println("Loading initial data...");
+            logger.info("Loading initial data...");
             loadInitialData();
-            System.out.println("Initial data loaded successfully!");
+            logger.info("Initial data loaded successfully!");
         } else {
-            System.out.println("Database already contains data, skipping initialization.");
+            logger.info("Database already contains data, skipping initialization.");
         }
 
-        System.out.println("=== DataLoader completed ===");
+        logger.info("=== DataLoader completed ===");
     }
 
     private void loadInitialData() {
-        // Create admin user
-        System.out.println("Creating admin user...");
+        // Create admin user from environment variables
+        logger.info("Creating admin user...");
+
+        // SECURITY: Validate admin password is set and strong
+        if (adminPassword == null || adminPassword.isEmpty()) {
+            throw new IllegalStateException("ADMIN_PASSWORD environment variable must be set. Use a strong password!");
+        }
+        if (adminPassword.length() < 12) {
+            logger.warn("SECURITY WARNING: Admin password is weak! Use at least 12 characters.");
+        }
+
         User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
+        admin.setUsername(adminUsername);
+        admin.setPassword(passwordEncoder.encode(adminPassword));
         admin.setEmail("admin@realestatecrm.com");
         admin.setFirstName("System");
         admin.setLastName("Administrator");
         admin.setRole(Role.ADMIN);
         admin.setStatus(UserStatus.ACTIVE);
         userRepository.save(admin);
-        System.out.println("Admin user created: " + admin.getUsername());
+        logger.info("Admin user created: {}", admin.getUsername());
 
         // Create basic property attributes
-        System.out.println("Creating property attributes...");
+        logger.info("Creating property attributes...");
         createBasicAttributes();
         createStructureAttributes();
         createFeatureAttributes();
@@ -83,10 +103,10 @@ public class DataLoader implements CommandLineRunner {
         createExteriorAttributes();
         createInteriorAttributes();
         createDocumentationAttributes();
-        System.out.println("Property attributes created successfully!");
+        logger.info("Property attributes created successfully!");
 
         // Create demo agents and properties with attribute values
-        System.out.println("Creating demo agents and properties...");
+        logger.info("Creating demo agents and properties...");
         User alice = new User();
         alice.setUsername("alice");
         alice.setPassword(passwordEncoder.encode("password"));
@@ -135,7 +155,7 @@ public class DataLoader implements CommandLineRunner {
         // Share p1 with Bob as a demo
         PropertySharing share = new PropertySharing(p1, bob, alice);
         propertySharingRepository.save(share);
-        System.out.println("Demo agents, properties, and attribute values created!");
+        logger.info("Demo agents, properties, and attribute values created!");
     }
 
     private void setAttributeValueByName(Property property, String attributeName, Object value) {

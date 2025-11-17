@@ -2,6 +2,7 @@ package com.realestatecrm.config;
 
 import com.realestatecrm.security.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -26,6 +27,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -35,6 +37,9 @@ public class SecurityConfig {
 
     @Autowired
     private AuthTokenFilter authTokenFilter;
+
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:4200}")
+    private String allowedOrigins;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -49,9 +54,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+
+        // SECURITY: Use specific allowed origins from environment variable
+        // Never use "*" with credentials enabled!
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        configuration.setAllowedOrigins(origins);
+
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
@@ -66,6 +77,18 @@ public class SecurityConfig {
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF Protection Strategy:
+                // CSRF is disabled because this API uses JWT tokens in Authorization headers (not cookies).
+                // CSRF attacks only work with cookie-based authentication where browsers automatically
+                // send credentials. With JWT in headers, the attacker's site cannot access or send tokens.
+                //
+                // WARNING: If you switch to cookie-based authentication (e.g., storing JWT in httpOnly cookies),
+                // you MUST enable CSRF protection with .csrf(csrf -> csrf.csrfTokenRepository(...))
+                //
+                // Current setup is safe IF AND ONLY IF:
+                // 1. JWT tokens are sent ONLY in Authorization header (not cookies)
+                // 2. Tokens are stored in memory or sessionStorage (NOT localStorage for XSS protection)
+                // 3. Frontend uses proper CORS and doesn't expose tokens to third parties
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -126,6 +149,9 @@ public class SecurityConfig {
     public SecurityFilterChain prodSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // CSRF Protection Strategy: See detailed comment in dev profile configuration
+                // CSRF disabled for JWT-in-header authentication (safe for this use case)
+                // IMPORTANT: Enable CSRF if switching to cookie-based authentication!
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)

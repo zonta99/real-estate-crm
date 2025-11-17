@@ -1,9 +1,11 @@
 package com.realestatecrm.controller;
 
 import com.realestatecrm.entity.Permission;
+import com.realestatecrm.entity.RefreshToken;
 import com.realestatecrm.entity.User;
 import com.realestatecrm.security.JwtUtils;
 import com.realestatecrm.service.CustomUserDetailsService;
+import com.realestatecrm.service.RefreshTokenService;
 import com.realestatecrm.service.UserService;
 import com.realestatecrm.service.PermissionService;
 import jakarta.validation.Valid;
@@ -27,13 +29,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
 
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final PermissionService permissionService;
+    private final RefreshTokenService refreshTokenService;
 
     @Value("${jwt.expiration:86400000}") // 24 hours default
     private int jwtExpirationMs;
@@ -42,11 +44,13 @@ public class AuthController {
     public AuthController(UserService userService,
                           AuthenticationManager authenticationManager,
                           JwtUtils jwtUtils,
-                          PermissionService permissionService) {
+                          PermissionService permissionService,
+                          RefreshTokenService refreshTokenService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.permissionService = permissionService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/login")
@@ -64,6 +68,9 @@ public class AuthController {
         User user = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // SECURITY FIX: Create proper refresh token
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
         UserInfo userInfo = new UserInfo(
                 user.getId().toString(),
                 user.getUsername(),
@@ -78,37 +85,44 @@ public class AuthController {
 
         return ResponseEntity.ok(new LoginResponse(
                 jwt,
+                refreshToken.getToken(),  // Return refresh token
                 userInfo,
                 jwtExpirationMs / 1000
         ));
     }
 
+    /**
+     * SECURITY FIX: Proper refresh token mechanism with validation and rotation
+     * Request body should contain: { "refreshToken": "token-string" }
+     */
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshTokenResponse> refreshToken(
-            @RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        String refreshTokenStr = request.refreshToken();
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new RuntimeException("Invalid authorization header");
+        if (refreshTokenStr == null || refreshTokenStr.isEmpty()) {
+            throw new RuntimeException("Refresh token is required");
         }
 
-        String oldToken = authorizationHeader.substring(7);
+        // Find and validate refresh token
+        RefreshToken refreshToken = refreshTokenService.findByToken(refreshTokenStr)
+                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
-        if (!jwtUtils.validateJwtToken(oldToken)) {
-            throw new RuntimeException("Invalid token");
-        }
+        // Verify token is not expired or revoked
+        refreshToken = refreshTokenService.verifyExpiration(refreshToken);
 
-        String username = jwtUtils.getUsernameFromJwtToken(oldToken);
-        User user = userService.getUserByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        // Rotate refresh token for security
+        RefreshToken newRefreshToken = refreshTokenService.rotateRefreshToken(refreshTokenStr);
 
+        // Generate new access token
+        User user = refreshToken.getUser();
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                username, null, List.of(() -> "ROLE_" + user.getRole().name()));
+                user.getUsername(), null, List.of(() -> "ROLE_" + user.getRole().name()));
 
-        String newToken = jwtUtils.generateJwtToken(authentication);
+        String newAccessToken = jwtUtils.generateJwtToken(authentication);
 
         return ResponseEntity.ok(new RefreshTokenResponse(
-                newToken,
-                null,
+                newAccessToken,
+                newRefreshToken.getToken(),
                 new java.util.Date(System.currentTimeMillis() + jwtExpirationMs)
         ));
     }

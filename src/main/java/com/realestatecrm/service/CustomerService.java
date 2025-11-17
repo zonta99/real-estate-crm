@@ -24,6 +24,8 @@ public class CustomerService {
     private final PropertyRepository propertyRepository;
     private final AttributeValueRepository attributeValueRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
+    private final CustomerNoteRepository customerNoteRepository;
+    private final CustomerInteractionRepository customerInteractionRepository;
     /*private final UserRepository userRepository;*/
 
     @Autowired
@@ -32,28 +34,35 @@ public class CustomerService {
                            PropertyRepository propertyRepository,
                            AttributeValueRepository attributeValueRepository,
                            PropertyAttributeRepository propertyAttributeRepository,
+                           CustomerNoteRepository customerNoteRepository,
+                           CustomerInteractionRepository customerInteractionRepository,
                            UserRepository userRepository) {
         this.customerRepository = customerRepository;
         this.searchCriteriaRepository = searchCriteriaRepository;
         this.propertyRepository = propertyRepository;
         this.attributeValueRepository = attributeValueRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
+        this.customerNoteRepository = customerNoteRepository;
+        this.customerInteractionRepository = customerInteractionRepository;
         //this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+        // LAZY FIX: Use findAllWithAgent to eagerly fetch agent relationship
+        return customerRepository.findAllWithAgent();
     }
 
     @Transactional(readOnly = true)
     public Page<Customer> getAllCustomers(Pageable pageable) {
-        return customerRepository.findAll(pageable);
+        // LAZY FIX: Use findAllWithAgent to eagerly fetch agent relationship
+        return customerRepository.findAllWithAgent(pageable);
     }
 
     @Transactional(readOnly = true)
     public Optional<Customer> getCustomerById(Long id) {
-        return customerRepository.findById(id);
+        // LAZY FIX: Use findByIdWithAgent to eagerly fetch agent relationship
+        return customerRepository.findByIdWithAgent(id);
     }
 
     @Transactional(readOnly = true)
@@ -317,5 +326,91 @@ public class CustomerService {
                 updatedCustomer.getBudgetMin().compareTo(updatedCustomer.getBudgetMax()) > 0) {
             throw new IllegalArgumentException("Minimum budget cannot be greater than maximum budget");
         }
+    }
+
+    // Customer Notes Operations
+    public CustomerNote createCustomerNote(Long customerId, User createdBy, String content) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + customerId));
+
+        CustomerNote note = new CustomerNote(customer, createdBy, content);
+        return customerNoteRepository.save(note);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerNote> getCustomerNotes(Long customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new EntityNotFoundException("Customer not found with id: " + customerId);
+        }
+        return customerNoteRepository.findByCustomerId(customerId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<CustomerNote> getCustomerNoteById(Long noteId) {
+        return customerNoteRepository.findById(noteId);
+    }
+
+    public void deleteCustomerNote(Long noteId) {
+        if (!customerNoteRepository.existsById(noteId)) {
+            throw new EntityNotFoundException("Customer note not found with id: " + noteId);
+        }
+        customerNoteRepository.deleteById(noteId);
+    }
+
+    // Customer Interactions Operations
+    public CustomerInteraction createCustomerInteraction(Long customerId, User user, CustomerInteraction interaction) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + customerId));
+
+        interaction.setCustomer(customer);
+        interaction.setUser(user);
+
+        // Validate and set related property if provided
+        if (interaction.getRelatedProperty() != null && interaction.getRelatedProperty().getId() != null) {
+            Property property = propertyRepository.findById(interaction.getRelatedProperty().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + interaction.getRelatedProperty().getId()));
+            interaction.setRelatedProperty(property);
+        }
+
+        return customerInteractionRepository.save(interaction);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerInteraction> getCustomerInteractions(Long customerId) {
+        if (!customerRepository.existsById(customerId)) {
+            throw new EntityNotFoundException("Customer not found with id: " + customerId);
+        }
+        return customerInteractionRepository.findByCustomerId(customerId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<CustomerInteraction> getCustomerInteractionById(Long interactionId) {
+        return customerInteractionRepository.findById(interactionId);
+    }
+
+    public CustomerInteraction updateCustomerInteraction(Long interactionId, CustomerInteraction updatedInteraction) {
+        CustomerInteraction existingInteraction = customerInteractionRepository.findById(interactionId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer interaction not found with id: " + interactionId));
+
+        existingInteraction.setType(updatedInteraction.getType());
+        existingInteraction.setSubject(updatedInteraction.getSubject());
+        existingInteraction.setNotes(updatedInteraction.getNotes());
+        existingInteraction.setInteractionDate(updatedInteraction.getInteractionDate());
+        existingInteraction.setDurationMinutes(updatedInteraction.getDurationMinutes());
+
+        if (updatedInteraction.getRelatedProperty() != null && updatedInteraction.getRelatedProperty().getId() != null) {
+            Property property = propertyRepository.findById(updatedInteraction.getRelatedProperty().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + updatedInteraction.getRelatedProperty().getId()));
+            existingInteraction.setRelatedProperty(property);
+        }
+
+        return customerInteractionRepository.save(existingInteraction);
+    }
+
+    public void deleteCustomerInteraction(Long interactionId) {
+        if (!customerInteractionRepository.existsById(interactionId)) {
+            throw new EntityNotFoundException("Customer interaction not found with id: " + interactionId);
+        }
+        customerInteractionRepository.deleteById(interactionId);
     }
 }

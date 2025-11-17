@@ -1,0 +1,70 @@
+# Production Profile Configuration
+spring:
+  # H2 Console - DISABLED in production
+  h2:
+    console:
+      enabled: false
+
+  # Production Database Configuration (PostgreSQL)
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/realestatecrm}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration for Production
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate  # SECURITY: Never auto-create/update schema in production!
+    show-sql: false  # SECURITY: Never log SQL in production
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        # Production optimizations
+        generate_statistics: false
+        use_sql_comments: false
+    open-in-view: false
+
+  # Security Configuration
+  security:
+    require-ssl: true  # SECURITY: Require HTTPS in production
+
+# Logging Configuration for Production
+logging:
+  level:
+    com.realestatecrm: INFO
+    org.springframework.security: WARN  # SECURITY: No debug logs in production
+    org.springframework.web: WARN
+    org.hibernate: WARN
+    root: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/real-estate-crm.log
+    max-size: 10MB
+    max-history: 30
+
+# Management Endpoints - Restricted in production
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized  # Only show details to authorized users
+  metrics:
+    export:
+      prometheus:
+        enabled: true

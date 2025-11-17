@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/properties")
-@CrossOrigin(origins = "*", maxAge = 3600)
 public class PropertyController {
 
     private final PropertyService propertyService;
@@ -79,6 +78,18 @@ public class PropertyController {
         Property property = propertyService.getPropertyById(id)
                 .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
 
+        // Return basic property info without attributes for better performance
+        return ResponseEntity.ok(convertToPropertyResponse(property));
+    }
+
+    @GetMapping("/{id}/with-attributes")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<PropertyResponse> getPropertyByIdWithAttributes(@PathVariable Long id) {
+        Property property = propertyService.getPropertyById(id)
+                .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
+
+        // Return complete property info including all dynamic attributes
         return ResponseEntity.ok(convertToPropertyResponseWithAttributes(property));
     }
 
