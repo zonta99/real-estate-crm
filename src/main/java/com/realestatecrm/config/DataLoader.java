@@ -1,5 +1,9 @@
 package com.realestatecrm.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.realestatecrm.dto.savedsearch.SearchFilterDTO;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.PropertyCategory;
 import com.realestatecrm.enums.PropertyDataType;
@@ -15,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -28,7 +34,9 @@ public class DataLoader implements CommandLineRunner {
     private final PropertyRepository propertyRepository;
     private final AttributeValueRepository attributeValueRepository;
     private final PropertySharingRepository propertySharingRepository;
+    private final SavedSearchRepository savedSearchRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ObjectMapper objectMapper;
 
     @Value("${admin.username:admin}")
     private String adminUsername;
@@ -43,6 +51,7 @@ public class DataLoader implements CommandLineRunner {
                       PropertyRepository propertyRepository,
                       AttributeValueRepository attributeValueRepository,
                       PropertySharingRepository propertySharingRepository,
+                      SavedSearchRepository savedSearchRepository,
                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
@@ -50,7 +59,10 @@ public class DataLoader implements CommandLineRunner {
         this.propertyRepository = propertyRepository;
         this.attributeValueRepository = attributeValueRepository;
         this.propertySharingRepository = propertySharingRepository;
+        this.savedSearchRepository = savedSearchRepository;
         this.passwordEncoder = passwordEncoder;
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Override
@@ -156,6 +168,11 @@ public class DataLoader implements CommandLineRunner {
         PropertySharing share = new PropertySharing(p1, bob, alice);
         propertySharingRepository.save(share);
         logger.info("Demo agents, properties, and attribute values created!");
+
+        // Create sample saved searches
+        logger.info("Creating sample saved searches...");
+        createSampleSavedSearches(alice, bob);
+        logger.info("Sample saved searches created!");
     }
 
     private void setAttributeValueByName(Property property, String attributeName, Object value) {
@@ -387,5 +404,166 @@ public class DataLoader implements CommandLineRunner {
             option.setDisplayOrder(i + 1);
             propertyAttributeOptionRepository.save(option);
         }
+    }
+
+    private void createSampleSavedSearches(User alice, User bob) {
+        try {
+            // Get commonly used attributes
+            PropertyAttribute bedroomsAttr = getAttributeByName("Bedrooms");
+            PropertyAttribute bathroomsAttr = getAttributeByName("Bathrooms");
+            PropertyAttribute propertyTypeAttr = getAttributeByName("Property Type");
+            PropertyAttribute cityAttr = getAttributeByName("City");
+            PropertyAttribute hasGarageAttr = getAttributeByName("Has Garage");
+            PropertyAttribute hasPoolAttr = getAttributeByName("Has Pool");
+            PropertyAttribute squareFootageAttr = getAttributeByName("Square Footage");
+            PropertyAttribute appliancesAttr = getAttributeByName("Included Appliances");
+            PropertyAttribute parkingAttr = getAttributeByName("Parking Features");
+
+            // Search 1: Family Homes (Alice) - NUMBER and SINGLE_SELECT filters
+            List<SearchFilterDTO> familyHomeFilters = new ArrayList<>();
+
+            SearchFilterDTO bedroomsFilter = new SearchFilterDTO();
+            bedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            bedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            bedroomsFilter.setMinValue(new BigDecimal("3"));
+            bedroomsFilter.setMaxValue(new BigDecimal("5"));
+            familyHomeFilters.add(bedroomsFilter);
+
+            SearchFilterDTO bathroomsFilter = new SearchFilterDTO();
+            bathroomsFilter.setAttributeId(bathroomsAttr.getId());
+            bathroomsFilter.setDataType(PropertyDataType.NUMBER);
+            bathroomsFilter.setMinValue(new BigDecimal("2"));
+            familyHomeFilters.add(bathroomsFilter);
+
+            SearchFilterDTO propertyTypeFilter = new SearchFilterDTO();
+            propertyTypeFilter.setAttributeId(propertyTypeAttr.getId());
+            propertyTypeFilter.setDataType(PropertyDataType.SINGLE_SELECT);
+            propertyTypeFilter.setSelectedValues(List.of("Single Family Home", "Townhouse"));
+            familyHomeFilters.add(propertyTypeFilter);
+
+            createSavedSearch(alice, "Family Homes 3-5BR",
+                    "Single family homes and townhouses with 3-5 bedrooms and at least 2 bathrooms",
+                    familyHomeFilters);
+
+            // Search 2: Downtown Condos (Bob) - SINGLE_SELECT and TEXT filters
+            List<SearchFilterDTO> downtownCondoFilters = new ArrayList<>();
+
+            SearchFilterDTO condoTypeFilter = new SearchFilterDTO();
+            condoTypeFilter.setAttributeId(propertyTypeAttr.getId());
+            condoTypeFilter.setDataType(PropertyDataType.SINGLE_SELECT);
+            condoTypeFilter.setSelectedValues(List.of("Condo"));
+            downtownCondoFilters.add(condoTypeFilter);
+
+            SearchFilterDTO cityFilter = new SearchFilterDTO();
+            cityFilter.setAttributeId(cityAttr.getId());
+            cityFilter.setDataType(PropertyDataType.TEXT);
+            cityFilter.setTextValue("downtown");
+            downtownCondoFilters.add(cityFilter);
+
+            createSavedSearch(bob, "Downtown Condos",
+                    "Condos in downtown areas",
+                    downtownCondoFilters);
+
+            // Search 3: Luxury Properties (Alice) - NUMBER and BOOLEAN filters
+            List<SearchFilterDTO> luxuryFilters = new ArrayList<>();
+
+            SearchFilterDTO sqftFilter = new SearchFilterDTO();
+            sqftFilter.setAttributeId(squareFootageAttr.getId());
+            sqftFilter.setDataType(PropertyDataType.NUMBER);
+            sqftFilter.setMinValue(new BigDecimal("2500"));
+            luxuryFilters.add(sqftFilter);
+
+            SearchFilterDTO garageFilter = new SearchFilterDTO();
+            garageFilter.setAttributeId(hasGarageAttr.getId());
+            garageFilter.setDataType(PropertyDataType.BOOLEAN);
+            garageFilter.setBooleanValue(true);
+            luxuryFilters.add(garageFilter);
+
+            SearchFilterDTO poolFilter = new SearchFilterDTO();
+            poolFilter.setAttributeId(hasPoolAttr.getId());
+            poolFilter.setDataType(PropertyDataType.BOOLEAN);
+            poolFilter.setBooleanValue(true);
+            luxuryFilters.add(poolFilter);
+
+            createSavedSearch(alice, "Luxury Properties",
+                    "Large homes (2500+ sq ft) with garage and pool",
+                    luxuryFilters);
+
+            // Search 4: Starter Homes (Bob) - Multiple NUMBER filters
+            List<SearchFilterDTO> starterHomeFilters = new ArrayList<>();
+
+            SearchFilterDTO starterBedroomsFilter = new SearchFilterDTO();
+            starterBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            starterBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            starterBedroomsFilter.setMinValue(new BigDecimal("2"));
+            starterBedroomsFilter.setMaxValue(new BigDecimal("3"));
+            starterHomeFilters.add(starterBedroomsFilter);
+
+            SearchFilterDTO starterBathroomsFilter = new SearchFilterDTO();
+            starterBathroomsFilter.setAttributeId(bathroomsAttr.getId());
+            starterBathroomsFilter.setDataType(PropertyDataType.NUMBER);
+            starterBathroomsFilter.setMinValue(new BigDecimal("1"));
+            starterBathroomsFilter.setMaxValue(new BigDecimal("2"));
+            starterHomeFilters.add(starterBathroomsFilter);
+
+            SearchFilterDTO starterSqftFilter = new SearchFilterDTO();
+            starterSqftFilter.setAttributeId(squareFootageAttr.getId());
+            starterSqftFilter.setDataType(PropertyDataType.NUMBER);
+            starterSqftFilter.setMaxValue(new BigDecimal("1500"));
+            starterHomeFilters.add(starterSqftFilter);
+
+            createSavedSearch(bob, "Starter Homes",
+                    "Smaller homes for first-time buyers (2-3BR, 1-2BA, under 1500 sq ft)",
+                    starterHomeFilters);
+
+            // Search 5: Modern Amenities (Alice) - MULTI_SELECT filters
+            List<SearchFilterDTO> modernFilters = new ArrayList<>();
+
+            SearchFilterDTO appliancesFilter = new SearchFilterDTO();
+            appliancesFilter.setAttributeId(appliancesAttr.getId());
+            appliancesFilter.setDataType(PropertyDataType.MULTI_SELECT);
+            appliancesFilter.setSelectedValues(List.of("Dishwasher", "Washer", "Dryer", "Microwave"));
+            modernFilters.add(appliancesFilter);
+
+            SearchFilterDTO parkingFilter = new SearchFilterDTO();
+            parkingFilter.setAttributeId(parkingAttr.getId());
+            parkingFilter.setDataType(PropertyDataType.MULTI_SELECT);
+            parkingFilter.setSelectedValues(List.of("Attached Garage", "Covered Parking"));
+            modernFilters.add(parkingFilter);
+
+            createSavedSearch(alice, "Modern Amenities",
+                    "Properties with modern appliances and covered parking",
+                    modernFilters);
+
+            logger.info("Created 5 sample saved searches demonstrating all filter types");
+
+        } catch (Exception e) {
+            logger.error("Error creating sample saved searches: {}", e.getMessage(), e);
+        }
+    }
+
+    private void createSavedSearch(User user, String name, String description, List<SearchFilterDTO> filters) {
+        try {
+            String filtersJson = objectMapper.writeValueAsString(filters);
+
+            SavedSearch savedSearch = new SavedSearch();
+            savedSearch.setUser(user);
+            savedSearch.setName(name);
+            savedSearch.setDescription(description);
+            savedSearch.setFiltersJson(filtersJson);
+
+            savedSearchRepository.save(savedSearch);
+            logger.info("Created saved search: '{}' for user: {}", name, user.getUsername());
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to serialize filters for saved search '{}': {}", name, e.getMessage());
+        }
+    }
+
+    private PropertyAttribute getAttributeByName(String attributeName) {
+        return propertyAttributeRepository.findByNameContainingIgnoreCase(attributeName)
+                .stream()
+                .filter(a -> a.getName().equalsIgnoreCase(attributeName))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Attribute not found: " + attributeName));
     }
 }
