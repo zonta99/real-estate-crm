@@ -1,5 +1,7 @@
 package com.realestatecrm.mapper;
 
+import com.realestatecrm.dto.property.request.CreatePropertyRequest;
+import com.realestatecrm.dto.property.request.UpdatePropertyRequest;
 import com.realestatecrm.dto.property.response.AttributeValueResponse;
 import com.realestatecrm.dto.property.response.PropertyResponse;
 import com.realestatecrm.dto.property.response.PropertySharingResponse;
@@ -19,19 +21,46 @@ public interface PropertyMapper {
 
     /**
      * Maps Property entity to PropertyResponse DTO (without attribute values).
+     * Uses default method to manually construct immutable PropertyResponse.
      */
-    @Mapping(target = "agentId", source = "agent.id")
-    @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
-    @Mapping(target = "attributeValues", ignore = true)
-    PropertyResponse toResponse(Property property);
+    default PropertyResponse toResponse(Property property) {
+        if (property == null) {
+            return null;
+        }
+        return new PropertyResponse(
+                property.getId(),
+                property.getTitle(),
+                property.getDescription(),
+                property.getPrice(),
+                property.getAgent().getId(),
+                property.getAgent().getFullName(),
+                property.getStatus(),
+                property.getCreatedDate(),
+                property.getUpdatedDate()
+        );
+    }
 
     /**
      * Maps Property entity to PropertyResponse DTO with attribute values.
+     * Uses default method to manually construct immutable PropertyResponse.
      */
-    @Mapping(target = "agentId", source = "property.agent.id")
-    @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
-    @Mapping(target = "attributeValues", source = "attributeValues")
-    PropertyResponse toResponseWithAttributes(Property property, List<AttributeValue> attributeValues);
+    default PropertyResponse toResponseWithAttributes(Property property, List<AttributeValue> attributeValues) {
+        if (property == null) {
+            return null;
+        }
+        return new PropertyResponse(
+                property.getId(),
+                property.getTitle(),
+                property.getDescription(),
+                property.getPrice(),
+                property.getAgent().getId(),
+                property.getAgent().getFullName(),
+                property.getStatus(),
+                property.getCreatedDate(),
+                property.getUpdatedDate(),
+                toAttributeValueResponseList(attributeValues)
+        );
+    }
 
     /**
      * Maps AttributeValue entity to AttributeValueResponse DTO.
@@ -57,4 +86,31 @@ public interface PropertyMapper {
     @Mapping(target = "sharedByUserId", source = "sharedByUser.id")
     @Mapping(target = "sharedByUserName", expression = "java(sharing.getSharedByUser().getFullName())")
     PropertySharingResponse toPropertySharingResponse(PropertySharing sharing);
+
+    // ==================== Request to Entity Mappings ====================
+
+    /**
+     * Maps CreatePropertyRequest DTO to Property entity.
+     * Note: agent and status fields must be set manually by the controller.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "attributeValues", ignore = true)
+    @Mapping(target = "propertySharing", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    Property toEntity(CreatePropertyRequest request);
+
+    /**
+     * Maps UpdatePropertyRequest DTO to Property entity.
+     * Note: agent field must be set manually by the controller if needed.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "attributeValues", ignore = true)
+    @Mapping(target = "propertySharing", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    Property toEntity(UpdatePropertyRequest request);
 }

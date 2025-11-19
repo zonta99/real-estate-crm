@@ -1,5 +1,8 @@
 package com.realestatecrm.mapper;
 
+import com.realestatecrm.dto.customer.request.CreateCustomerInteractionRequest;
+import com.realestatecrm.dto.customer.request.CreateCustomerRequest;
+import com.realestatecrm.dto.customer.request.UpdateCustomerRequest;
 import com.realestatecrm.dto.customer.response.CustomerInteractionResponse;
 import com.realestatecrm.dto.customer.response.CustomerNoteResponse;
 import com.realestatecrm.dto.customer.response.CustomerResponse;
@@ -38,12 +41,11 @@ public interface CustomerMapper {
     /**
      * Maps Property entity to PropertyMatchResponse DTO for customer property matches.
      */
-    @Mapping(target = "propertyId", source = "id")
-    @Mapping(target = "propertyTitle", source = "title")
-    @Mapping(target = "propertyDescription", source = "description")
-    @Mapping(target = "propertyPrice", source = "price")
-    @Mapping(target = "propertyStatus", source = "status")
-    @Mapping(target = "agentId", source = "agent.id")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "status", source = "status")
     @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
     PropertyMatchResponse toPropertyMatchResponse(Property property);
 
@@ -66,4 +68,40 @@ public interface CustomerMapper {
     @Mapping(target = "relatedPropertyId", source = "relatedProperty.id")
     @Mapping(target = "relatedPropertyTitle", source = "relatedProperty.title")
     CustomerInteractionResponse toCustomerInteractionResponse(CustomerInteraction interaction);
+
+    // ==================== Request to Entity Mappings ====================
+
+    /**
+     * Maps CreateCustomerRequest DTO to Customer entity.
+     * Note: agent and status fields must be set manually by the controller.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    @Mapping(target = "searchCriteria", ignore = true)
+    Customer toEntity(CreateCustomerRequest request);
+
+    /**
+     * Maps UpdateCustomerRequest DTO to Customer entity.
+     * Note: agent field must be set manually by the controller if needed.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    @Mapping(target = "searchCriteria", ignore = true)
+    Customer toEntity(UpdateCustomerRequest request);
+
+    /**
+     * Maps CreateCustomerInteractionRequest DTO to CustomerInteraction entity.
+     * Note: customer, user, and relatedProperty must be set manually by the controller.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "customer", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "relatedProperty", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    CustomerInteraction toEntity(CreateCustomerInteractionRequest request);
 }

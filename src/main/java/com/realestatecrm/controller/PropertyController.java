@@ -111,10 +111,7 @@ public class PropertyController {
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        Property property = new Property();
-        property.setTitle(request.getTitle());
-        property.setDescription(request.getDescription());
-        property.setPrice(request.getPrice());
+        Property property = propertyMapper.toEntity(request);
         property.setAgent(currentUser);
         property.setStatus(PropertyStatus.ACTIVE);
 
@@ -128,12 +125,7 @@ public class PropertyController {
             @PathVariable Long id,
             @Valid @RequestBody UpdatePropertyRequest request) {
 
-        Property property = new Property();
-        property.setTitle(request.getTitle());
-        property.setDescription(request.getDescription());
-        property.setPrice(request.getPrice());
-        property.setStatus(request.getStatus());
-
+        Property property = propertyMapper.toEntity(request);
         Property updatedProperty = propertyService.updateProperty(id, property);
         return ResponseEntity.ok(propertyMapper.toResponse(updatedProperty));
     }
@@ -253,7 +245,7 @@ public class PropertyController {
 
         try {
             Page<Property> properties = savedSearchService.executeSearch(request);
-            Page<PropertyResponse> response = properties.map(this::convertToPropertyResponse);
+            Page<PropertyResponse> response = properties.map(propertyMapper::toResponse);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
