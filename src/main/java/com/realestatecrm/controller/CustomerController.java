@@ -12,15 +12,11 @@ import com.realestatecrm.dto.customer.response.CustomerResponse;
 import com.realestatecrm.dto.customer.response.CustomerSearchCriteriaResponse;
 import com.realestatecrm.dto.customer.response.PropertyMatchResponse;
 import com.realestatecrm.entity.*;
-import com.realestatecrm.enums.InteractionType;
 import com.realestatecrm.enums.CustomerStatus;
 import com.realestatecrm.mapper.CustomerMapper;
 import com.realestatecrm.service.CustomerService;
 import com.realestatecrm.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +28,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -132,7 +127,7 @@ public class CustomerController {
         customer.setStatus(request.getStatus());
 
         Customer updatedCustomer = customerService.updateCustomer(id, customer);
-        return ResponseEntity.ok(convertToCustomerResponse(updatedCustomer));
+        return ResponseEntity.ok(customerMapper.toResponse(updatedCustomer));
     }
 
     @DeleteMapping("/{id}")
@@ -166,7 +161,7 @@ public class CustomerController {
     public ResponseEntity<List<CustomerSearchCriteriaResponse>> getSearchCriteria(@PathVariable Long id) {
         List<CustomerSearchCriteria> criteria = customerService.getSearchCriteria(id);
         List<CustomerSearchCriteriaResponse> responses = criteria.stream()
-                .map(this::customerMapper.toSearchCriteriaResponse)
+                .map(customerMapper::toSearchCriteriaResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -187,7 +182,7 @@ public class CustomerController {
     public ResponseEntity<List<PropertyMatchResponse>> getMatchingProperties(@PathVariable Long id) {
         List<Property> matchingProperties = customerService.findMatchingProperties(id);
         List<PropertyMatchResponse> responses = matchingProperties.stream()
-                .map(this::customerMapper.toPropertyMatchResponse)
+                .map(customerMapper::toPropertyMatchResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
