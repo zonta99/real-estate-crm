@@ -29,6 +29,7 @@ public class DataLoader implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(DataLoader.class);
 
     private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
     private final PropertyAttributeOptionRepository propertyAttributeOptionRepository;
     private final PropertyRepository propertyRepository;
@@ -46,6 +47,7 @@ public class DataLoader implements CommandLineRunner {
 
     @Autowired
     public DataLoader(UserRepository userRepository,
+                      CustomerRepository customerRepository,
                       PropertyAttributeRepository propertyAttributeRepository,
                       PropertyAttributeOptionRepository propertyAttributeOptionRepository,
                       PropertyRepository propertyRepository,
@@ -54,6 +56,7 @@ public class DataLoader implements CommandLineRunner {
                       SavedSearchRepository savedSearchRepository,
                       PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.customerRepository = customerRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
         this.propertyAttributeOptionRepository = propertyAttributeOptionRepository;
         this.propertyRepository = propertyRepository;
@@ -169,9 +172,42 @@ public class DataLoader implements CommandLineRunner {
         propertySharingRepository.save(share);
         logger.info("Demo agents, properties, and attribute values created!");
 
+        // Create demo customers
+        logger.info("Creating demo customers...");
+        Customer customer1 = new Customer();
+        customer1.setFirstName("John");
+        customer1.setLastName("Smith");
+        customer1.setEmail("john.smith@example.com");
+        customer1.setPhone("555-0101");
+        customer1.setBudgetMin(new BigDecimal("300000"));
+        customer1.setBudgetMax(new BigDecimal("450000"));
+        customer1.setAgent(alice);
+        customer1 = customerRepository.save(customer1);
+
+        Customer customer2 = new Customer();
+        customer2.setFirstName("Sarah");
+        customer2.setLastName("Johnson");
+        customer2.setEmail("sarah.johnson@example.com");
+        customer2.setPhone("555-0102");
+        customer2.setBudgetMin(new BigDecimal("400000"));
+        customer2.setBudgetMax(new BigDecimal("600000"));
+        customer2.setAgent(bob);
+        customer2 = customerRepository.save(customer2);
+
+        Customer customer3 = new Customer();
+        customer3.setFirstName("Michael");
+        customer3.setLastName("Williams");
+        customer3.setEmail("michael.williams@example.com");
+        customer3.setPhone("555-0103");
+        customer3.setBudgetMin(new BigDecimal("200000"));
+        customer3.setBudgetMax(new BigDecimal("350000"));
+        customer3.setAgent(alice);
+        customer3 = customerRepository.save(customer3);
+        logger.info("Demo customers created!");
+
         // Create sample saved searches
         logger.info("Creating sample saved searches...");
-        createSampleSavedSearches(alice, bob);
+        createSampleSavedSearches(customer1, customer2, customer3);
         logger.info("Sample saved searches created!");
     }
 
@@ -406,7 +442,7 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    private void createSampleSavedSearches(User alice, User bob) {
+    private void createSampleSavedSearches(Customer customer1, Customer customer2, Customer customer3) {
         try {
             // Get commonly used attributes
             PropertyAttribute bedroomsAttr = getAttributeByName("Bedrooms");
@@ -441,11 +477,11 @@ public class DataLoader implements CommandLineRunner {
             propertyTypeFilter.setSelectedValues(List.of("Single Family Home", "Townhouse"));
             familyHomeFilters.add(propertyTypeFilter);
 
-            createSavedSearch(alice, "Family Homes 3-5BR",
+            createSavedSearch(customer1, "Family Homes 3-5BR",
                     "Single family homes and townhouses with 3-5 bedrooms and at least 2 bathrooms",
                     familyHomeFilters);
 
-            // Search 2: Downtown Condos (Bob) - SINGLE_SELECT and TEXT filters
+            // Search 2: Downtown Condos (Customer2 - Sarah) - SINGLE_SELECT and TEXT filters
             List<SearchFilterDTO> downtownCondoFilters = new ArrayList<>();
 
             SearchFilterDTO condoTypeFilter = new SearchFilterDTO();
@@ -460,11 +496,11 @@ public class DataLoader implements CommandLineRunner {
             cityFilter.setTextValue("downtown");
             downtownCondoFilters.add(cityFilter);
 
-            createSavedSearch(bob, "Downtown Condos",
+            createSavedSearch(customer2, "Downtown Condos",
                     "Condos in downtown areas",
                     downtownCondoFilters);
 
-            // Search 3: Luxury Properties (Alice) - NUMBER and BOOLEAN filters
+            // Search 3: Luxury Properties (Customer2 - Sarah) - NUMBER and BOOLEAN filters
             List<SearchFilterDTO> luxuryFilters = new ArrayList<>();
 
             SearchFilterDTO sqftFilter = new SearchFilterDTO();
@@ -485,11 +521,11 @@ public class DataLoader implements CommandLineRunner {
             poolFilter.setBooleanValue(true);
             luxuryFilters.add(poolFilter);
 
-            createSavedSearch(alice, "Luxury Properties",
+            createSavedSearch(customer2, "Luxury Properties",
                     "Large homes (2500+ sq ft) with garage and pool",
                     luxuryFilters);
 
-            // Search 4: Starter Homes (Bob) - Multiple NUMBER filters
+            // Search 4: Starter Homes (Customer3 - Michael) - Multiple NUMBER filters
             List<SearchFilterDTO> starterHomeFilters = new ArrayList<>();
 
             SearchFilterDTO starterBedroomsFilter = new SearchFilterDTO();
@@ -512,11 +548,11 @@ public class DataLoader implements CommandLineRunner {
             starterSqftFilter.setMaxValue(new BigDecimal("1500"));
             starterHomeFilters.add(starterSqftFilter);
 
-            createSavedSearch(bob, "Starter Homes",
+            createSavedSearch(customer3, "Starter Homes",
                     "Smaller homes for first-time buyers (2-3BR, 1-2BA, under 1500 sq ft)",
                     starterHomeFilters);
 
-            // Search 5: Modern Amenities (Alice) - MULTI_SELECT filters
+            // Search 5: Modern Amenities (Customer1 - John) - MULTI_SELECT filters
             List<SearchFilterDTO> modernFilters = new ArrayList<>();
 
             SearchFilterDTO appliancesFilter = new SearchFilterDTO();
@@ -531,29 +567,29 @@ public class DataLoader implements CommandLineRunner {
             parkingFilter.setSelectedValues(List.of("Attached Garage", "Covered Parking"));
             modernFilters.add(parkingFilter);
 
-            createSavedSearch(alice, "Modern Amenities",
+            createSavedSearch(customer1, "Modern Amenities",
                     "Properties with modern appliances and covered parking",
                     modernFilters);
 
-            logger.info("Created 5 sample saved searches demonstrating all filter types");
+            logger.info("Created 5 sample saved searches for 3 customers demonstrating all filter types");
 
         } catch (Exception e) {
             logger.error("Error creating sample saved searches: {}", e.getMessage(), e);
         }
     }
 
-    private void createSavedSearch(User user, String name, String description, List<SearchFilterDTO> filters) {
+    private void createSavedSearch(Customer customer, String name, String description, List<SearchFilterDTO> filters) {
         try {
             String filtersJson = objectMapper.writeValueAsString(filters);
 
             SavedSearch savedSearch = new SavedSearch();
-            savedSearch.setUser(user);
+            savedSearch.setCustomer(customer);
             savedSearch.setName(name);
             savedSearch.setDescription(description);
             savedSearch.setFiltersJson(filtersJson);
 
             savedSearchRepository.save(savedSearch);
-            logger.info("Created saved search: '{}' for user: {}", name, user.getUsername());
+            logger.info("Created saved search: '{}' for customer: {} {}", name, customer.getFirstName(), customer.getLastName());
         } catch (JsonProcessingException e) {
             logger.error("Failed to serialize filters for saved search '{}': {}", name, e.getMessage());
         }

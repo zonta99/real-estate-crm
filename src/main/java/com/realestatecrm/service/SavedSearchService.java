@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 public class SavedSearchService {
 
     private final SavedSearchRepository savedSearchRepository;
+    private final CustomerRepository customerRepository;
     private final PropertyRepository propertyRepository;
     private final AttributeValueRepository attributeValueRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
@@ -42,10 +43,12 @@ public class SavedSearchService {
 
     @Autowired
     public SavedSearchService(SavedSearchRepository savedSearchRepository,
+                              CustomerRepository customerRepository,
                               PropertyRepository propertyRepository,
                               AttributeValueRepository attributeValueRepository,
                               PropertyAttributeRepository propertyAttributeRepository) {
         this.savedSearchRepository = savedSearchRepository;
+        this.customerRepository = customerRepository;
         this.propertyRepository = propertyRepository;
         this.attributeValueRepository = attributeValueRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
@@ -55,26 +58,36 @@ public class SavedSearchService {
 
     @Transactional(readOnly = true)
     public List<SavedSearchResponse> getAllSavedSearches() {
-        return savedSearchRepository.findAllWithUser().stream()
+        return savedSearchRepository.findAllWithCustomer().stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<SavedSearchResponse> getSavedSearchesByUser(Long userId) {
-        return savedSearchRepository.findByUserIdWithUser(userId).stream()
+    public List<SavedSearchResponse> getSavedSearchesByCustomer(Long customerId) {
+        return savedSearchRepository.findByCustomerIdWithCustomer(customerId).stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SavedSearchResponse> getSavedSearchesByAgent(Long agentId) {
+        return savedSearchRepository.findByCustomerAgentId(agentId).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public Optional<SavedSearchResponse> getSavedSearchById(Long id) {
-        return savedSearchRepository.findByIdWithUser(id)
+        return savedSearchRepository.findByIdWithCustomer(id)
                 .map(this::convertToResponse);
     }
 
-    public SavedSearchResponse createSavedSearch(User user, SavedSearchRequest request) {
+    public SavedSearchResponse createSavedSearch(Long customerId, SavedSearchRequest request) {
         validateSavedSearchRequest(request);
+
+        Customer customer = customerRepository.findByIdWithAgent(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + customerId));
 
         String filtersJson;
         try {
@@ -84,25 +97,25 @@ public class SavedSearchService {
         }
 
         SavedSearch savedSearch = new SavedSearch();
-        savedSearch.setUser(user);
+        savedSearch.setCustomer(customer);
         savedSearch.setName(request.getName());
         savedSearch.setDescription(request.getDescription());
         savedSearch.setFiltersJson(filtersJson);
 
         SavedSearch saved = savedSearchRepository.save(savedSearch);
-        return convertToResponse(savedSearchRepository.findByIdWithUser(saved.getId())
+        return convertToResponse(savedSearchRepository.findByIdWithCustomer(saved.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Saved search not found after creation")));
     }
 
-    public SavedSearchResponse updateSavedSearch(Long id, Long userId, SavedSearchRequest request) {
+    public SavedSearchResponse updateSavedSearch(Long id, Long agentId, SavedSearchRequest request) {
         validateSavedSearchRequest(request);
 
-        SavedSearch savedSearch = savedSearchRepository.findByIdWithUser(id)
+        SavedSearch savedSearch = savedSearchRepository.findByIdWithCustomer(id)
                 .orElseThrow(() -> new EntityNotFoundException("Saved search not found with id: " + id));
 
-        // Authorization check: ensure the user owns this saved search
-        if (!savedSearch.getUser().getId().equals(userId)) {
-            throw new SecurityException("Access denied: You can only update your own saved searches");
+        // Authorization check: ensure the agent owns this customer's saved search
+        if (!savedSearch.getCustomer().getAgent().getId().equals(agentId)) {
+            throw new SecurityException("Access denied: You can only update saved searches for your own customers");
         }
 
         String filtersJson;
@@ -120,13 +133,13 @@ public class SavedSearchService {
         return convertToResponse(updated);
     }
 
-    public void deleteSavedSearch(Long id, Long userId) {
-        SavedSearch savedSearch = savedSearchRepository.findByIdWithUser(id)
+    public void deleteSavedSearch(Long id, Long agentId) {
+        SavedSearch savedSearch = savedSearchRepository.findByIdWithCustomer(id)
                 .orElseThrow(() -> new EntityNotFoundException("Saved search not found with id: " + id));
 
-        // Authorization check: ensure the user owns this saved search
-        if (!savedSearch.getUser().getId().equals(userId)) {
-            throw new SecurityException("Access denied: You can only delete your own saved searches");
+        // Authorization check: ensure the agent owns this customer's saved search
+        if (!savedSearch.getCustomer().getAgent().getId().equals(agentId)) {
+            throw new SecurityException("Access denied: You can only delete saved searches for your own customers");
         }
 
         savedSearchRepository.delete(savedSearch);
@@ -159,13 +172,13 @@ public class SavedSearchService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Property> executeSavedSearch(Long searchId, Long userId, Integer page, Integer size, String sort) {
-        SavedSearch savedSearch = savedSearchRepository.findByIdWithUser(searchId)
+    public Page<Property> executeSavedSearch(Long searchId, Long agentId, Integer page, Integer size, String sort) {
+        SavedSearch savedSearch = savedSearchRepository.findByIdWithCustomer(searchId)
                 .orElseThrow(() -> new EntityNotFoundException("Saved search not found with id: " + searchId));
 
-        // Authorization check: ensure the user owns this saved search
-        if (!savedSearch.getUser().getId().equals(userId)) {
-            throw new SecurityException("Access denied: You can only execute your own saved searches");
+        // Authorization check: ensure the agent owns this customer's saved search
+        if (!savedSearch.getCustomer().getAgent().getId().equals(agentId)) {
+            throw new SecurityException("Access denied: You can only execute saved searches for your own customers");
         }
 
         // Deserialize filters from JSON
@@ -401,8 +414,10 @@ public class SavedSearchService {
 
         return new SavedSearchResponse(
                 savedSearch.getId(),
-                savedSearch.getUser().getId(),
-                savedSearch.getUser().getFullName(),
+                savedSearch.getCustomer().getId(),
+                savedSearch.getCustomer().getFullName(),
+                savedSearch.getCustomer().getAgent().getId(),
+                savedSearch.getCustomer().getAgent().getFullName(),
                 savedSearch.getName(),
                 savedSearch.getDescription(),
                 filters,
@@ -412,7 +427,7 @@ public class SavedSearchService {
     }
 
     @Transactional(readOnly = true)
-    public long countSavedSearchesByUser(Long userId) {
-        return savedSearchRepository.countByUserId(userId);
+    public long countSavedSearchesByCustomer(Long customerId) {
+        return savedSearchRepository.countByCustomerId(customerId);
     }
 }

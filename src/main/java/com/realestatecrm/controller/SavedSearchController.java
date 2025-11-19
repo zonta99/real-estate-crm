@@ -5,8 +5,10 @@ import com.realestatecrm.dto.property.response.PropertyResponse;
 import com.realestatecrm.dto.savedsearch.PropertySearchCriteriaRequest;
 import com.realestatecrm.dto.savedsearch.SavedSearchRequest;
 import com.realestatecrm.dto.savedsearch.SavedSearchResponse;
+import com.realestatecrm.entity.Customer;
 import com.realestatecrm.entity.Property;
 import com.realestatecrm.entity.User;
+import com.realestatecrm.service.CustomerService;
 import com.realestatecrm.service.SavedSearchService;
 import com.realestatecrm.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,31 +27,60 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/saved-searches")
+@RequestMapping("/api")
 public class SavedSearchController {
 
     private final SavedSearchService savedSearchService;
+    private final CustomerService customerService;
     private final UserService userService;
 
     @Autowired
-    public SavedSearchController(SavedSearchService savedSearchService, UserService userService) {
+    public SavedSearchController(SavedSearchService savedSearchService,
+                                 CustomerService customerService,
+                                 UserService userService) {
         this.savedSearchService = savedSearchService;
+        this.customerService = customerService;
         this.userService = userService;
     }
 
-    @GetMapping
+    // Get all saved searches for the current agent's customers
+    @GetMapping("/saved-searches")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<List<SavedSearchResponse>> getAllSavedSearches(
+    public ResponseEntity<List<SavedSearchResponse>> getAllSavedSearchesForAgent(
             @AuthenticationPrincipal UserDetails userDetails) {
 
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        List<SavedSearchResponse> searches = savedSearchService.getSavedSearchesByUser(currentUser.getId());
+        List<SavedSearchResponse> searches = savedSearchService.getSavedSearchesByAgent(currentUser.getId());
         return ResponseEntity.ok(searches);
     }
 
-    @GetMapping("/{id}")
+    // Get all saved searches for a specific customer
+    @GetMapping("/customers/{customerId}/saved-searches")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<?> getSavedSearchesForCustomer(
+            @PathVariable Long customerId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User currentUser = userService.getUserByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        // Check if customer belongs to current user
+        Customer customer = customerService.getCustomerById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
+
+        if (!customer.getAgent().getId().equals(currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("Access denied: You can only view saved searches for your own customers"));
+        }
+
+        List<SavedSearchResponse> searches = savedSearchService.getSavedSearchesByCustomer(customerId);
+        return ResponseEntity.ok(searches);
+    }
+
+    // Get specific saved search by ID
+    @GetMapping("/saved-searches/{id}")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<?> getSavedSearchById(
             @PathVariable Long id,
@@ -61,8 +92,8 @@ public class SavedSearchController {
         SavedSearchResponse response = savedSearchService.getSavedSearchById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Saved search not found"));
 
-        // Authorization check
-        if (!response.getUserId().equals(currentUser.getId())) {
+        // Authorization check: ensure agent owns this customer
+        if (!response.getAgentId().equals(currentUser.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new MessageResponse("Access denied"));
         }
@@ -70,25 +101,42 @@ public class SavedSearchController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
+    // Create new saved search for a customer
+    @PostMapping("/customers/{customerId}/saved-searches")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<Map<String, Object>> createSavedSearch(
+    public ResponseEntity<?> createSavedSearch(
+            @PathVariable Long customerId,
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody SavedSearchRequest request) {
 
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        SavedSearchResponse response = savedSearchService.createSavedSearch(currentUser, request);
+        // Check if customer belongs to current user
+        Customer customer = customerService.getCustomerById(customerId)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
 
-        Map<String, Object> responseBody = new HashMap<>();
-        responseBody.put("message", "Saved search created successfully");
-        responseBody.put("data", response);
+        if (!customer.getAgent().getId().equals(currentUser.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageResponse("Access denied: You can only create saved searches for your own customers"));
+        }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
+        try {
+            SavedSearchResponse response = savedSearchService.createSavedSearch(customerId, request);
+
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("message", "Saved search created successfully");
+            responseBody.put("data", response);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        }
     }
 
-    @PutMapping("/{id}")
+    // Update saved search
+    @PutMapping("/saved-searches/{id}")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<?> updateSavedSearch(
             @PathVariable Long id,
@@ -112,10 +160,14 @@ public class SavedSearchController {
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new MessageResponse(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
         }
     }
 
-    @DeleteMapping("/{id}")
+    // Delete saved search
+    @DeleteMapping("/saved-searches/{id}")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteSavedSearch(
             @PathVariable Long id,
@@ -136,7 +188,8 @@ public class SavedSearchController {
         }
     }
 
-    @GetMapping("/{id}/execute")
+    // Execute a saved search
+    @GetMapping("/saved-searches/{id}/execute")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<?> executeSavedSearch(
             @PathVariable Long id,

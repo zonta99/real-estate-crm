@@ -21,8 +21,8 @@ public class SavedSearch {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
     @NotBlank
     @Size(max = 100)
@@ -48,8 +48,8 @@ public class SavedSearch {
     // Constructors
     public SavedSearch() {}
 
-    public SavedSearch(User user, String name, String description, String filtersJson) {
-        this.user = user;
+    public SavedSearch(Customer customer, String name, String description, String filtersJson) {
+        this.customer = customer;
         this.name = name;
         this.description = description;
         this.filtersJson = filtersJson;
@@ -64,12 +64,12 @@ public class SavedSearch {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Customer getCustomer() {
+        return customer;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
     public String getName() {

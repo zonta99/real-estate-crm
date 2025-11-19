@@ -5,20 +5,24 @@ import java.util.List;
 
 public class SavedSearchResponse {
     private Long id;
-    private Long userId;
-    private String userName;
+    private Long customerId;
+    private String customerName;
+    private Long agentId;
+    private String agentName;
     private String name;
     private String description;
     private List<SearchFilterDTO> filters;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
 
-    public SavedSearchResponse(Long id, Long userId, String userName, String name,
-                               String description, List<SearchFilterDTO> filters,
+    public SavedSearchResponse(Long id, Long customerId, String customerName, Long agentId, String agentName,
+                               String name, String description, List<SearchFilterDTO> filters,
                                LocalDateTime createdDate, LocalDateTime updatedDate) {
         this.id = id;
-        this.userId = userId;
-        this.userName = userName;
+        this.customerId = customerId;
+        this.customerName = customerName;
+        this.agentId = agentId;
+        this.agentName = agentName;
         this.name = name;
         this.description = description;
         this.filters = filters;
@@ -31,12 +35,20 @@ public class SavedSearchResponse {
         return id;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public Long getAgentId() {
+        return agentId;
+    }
+
+    public String getAgentName() {
+        return agentName;
     }
 
     public String getName() {

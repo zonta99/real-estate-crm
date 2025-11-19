@@ -13,24 +13,29 @@ import java.util.Optional;
 @Repository
 public interface SavedSearchRepository extends JpaRepository<SavedSearch, Long> {
 
-    // LAZY FIX: Optimized query with user eager loading to avoid LazyInitializationException
-    @EntityGraph(attributePaths = {"user"})
+    // LAZY FIX: Optimized query with customer eager loading to avoid LazyInitializationException
+    @EntityGraph(attributePaths = {"customer", "customer.agent"})
     @Query("SELECT s FROM SavedSearch s WHERE s.id = :id")
-    Optional<SavedSearch> findByIdWithUser(@Param("id") Long id);
+    Optional<SavedSearch> findByIdWithCustomer(@Param("id") Long id);
 
-    // LAZY FIX: Optimized findAll with user
-    @EntityGraph(attributePaths = {"user"})
+    // LAZY FIX: Optimized findAll with customer
+    @EntityGraph(attributePaths = {"customer", "customer.agent"})
     @Query("SELECT s FROM SavedSearch s")
-    List<SavedSearch> findAllWithUser();
+    List<SavedSearch> findAllWithCustomer();
 
-    // LAZY FIX: Find all searches for a specific user
-    @EntityGraph(attributePaths = {"user"})
-    @Query("SELECT s FROM SavedSearch s WHERE s.user.id = :userId ORDER BY s.updatedDate DESC")
-    List<SavedSearch> findByUserIdWithUser(@Param("userId") Long userId);
+    // LAZY FIX: Find all searches for a specific customer
+    @EntityGraph(attributePaths = {"customer", "customer.agent"})
+    @Query("SELECT s FROM SavedSearch s WHERE s.customer.id = :customerId ORDER BY s.updatedDate DESC")
+    List<SavedSearch> findByCustomerIdWithCustomer(@Param("customerId") Long customerId);
 
-    // Check if a saved search exists for a user
-    boolean existsByIdAndUserId(Long id, Long userId);
+    // Find all searches for customers belonging to a specific agent
+    @EntityGraph(attributePaths = {"customer", "customer.agent"})
+    @Query("SELECT s FROM SavedSearch s WHERE s.customer.agent.id = :agentId ORDER BY s.customer.lastName, s.updatedDate DESC")
+    List<SavedSearch> findByCustomerAgentId(@Param("agentId") Long agentId);
 
-    // Count searches for a user
-    long countByUserId(Long userId);
+    // Check if a saved search exists for a customer
+    boolean existsByIdAndCustomerId(Long id, Long customerId);
+
+    // Count searches for a customer
+    long countByCustomerId(Long customerId);
 }
