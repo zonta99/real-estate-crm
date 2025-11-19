@@ -9,6 +9,7 @@ import com.realestatecrm.entity.User;
 import com.realestatecrm.enums.Role;
 import com.realestatecrm.enums.UserStatus;
 import com.realestatecrm.service.UserService;
+import com.realestatecrm.mapper.UserMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -34,10 +35,12 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserMapper userMapper) {
         this.userService = userService;
+        this.userMapper = userMapper;
     }
 
     @GetMapping
@@ -51,7 +54,7 @@ public class UserController {
 
         List<User> accessibleUsers = userService.getAccessibleUsers(currentUser.getId());
         List<UserResponse> userResponses = accessibleUsers.stream()
-                .map(this::convertToUserResponse)
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
 
         // Simple pagination implementation
@@ -72,7 +75,7 @@ public class UserController {
         User user = userService.getUserById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        return ResponseEntity.ok(convertToUserResponse(user));
+        return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
     @PostMapping
@@ -88,7 +91,7 @@ public class UserController {
         user.setStatus(UserStatus.ACTIVE);
 
         User createdUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToUserResponse(createdUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponse(createdUser));
     }
 
     @PutMapping("/{id}")
@@ -105,7 +108,7 @@ public class UserController {
         user.setStatus(request.status());
 
         User updatedUser = userService.updateUser(id, user);
-        return ResponseEntity.ok(convertToUserResponse(updatedUser));
+        return ResponseEntity.ok(userMapper.toResponse(updatedUser));
     }
 
     @DeleteMapping("/{id}")
@@ -140,7 +143,7 @@ public class UserController {
     public ResponseEntity<List<UserResponse>> getSubordinates(@PathVariable Long id) {
         List<User> subordinates = userService.getDirectSubordinates(id);
         List<UserResponse> responses = subordinates.stream()
-                .map(this::convertToUserResponse)
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -151,23 +154,9 @@ public class UserController {
     public ResponseEntity<List<UserResponse>> getUsersByRole(@PathVariable Role role) {
         List<User> users = userService.getUsersByRole(role);
         List<UserResponse> responses = users.stream()
-                .map(this::convertToUserResponse)
+                .map(userMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
-    }
-
-    private UserResponse convertToUserResponse(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getRole(),
-                user.getStatus(),
-                user.getCreatedDate(),
-                user.getUpdatedDate()
-        );
     }
 }

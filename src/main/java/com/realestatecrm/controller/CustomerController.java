@@ -14,6 +14,7 @@ import com.realestatecrm.dto.customer.response.PropertyMatchResponse;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.InteractionType;
 import com.realestatecrm.enums.CustomerStatus;
+import com.realestatecrm.mapper.CustomerMapper;
 import com.realestatecrm.service.CustomerService;
 import com.realestatecrm.service.UserService;
 import jakarta.validation.Valid;
@@ -41,11 +42,14 @@ public class CustomerController {
 
     private final CustomerService customerService;
     private final UserService userService;
+    private final CustomerMapper customerMapper;
 
     @Autowired
-    public CustomerController(CustomerService customerService, UserService userService) {
+    public CustomerController(CustomerService customerService, UserService userService,
+                            CustomerMapper customerMapper) {
         this.customerService = customerService;
         this.userService = userService;
+        this.customerMapper = customerMapper;
     }
 
     @GetMapping
@@ -72,7 +76,7 @@ public class CustomerController {
             customers = customerService.getCustomersByStatus(status, pageable);
         }
 
-        Page<CustomerResponse> response = customers.map(this::convertToCustomerResponse);
+        Page<CustomerResponse> response = customers.map(customerMapper::toResponse);
         return ResponseEntity.ok(response);
     }
 
@@ -154,7 +158,7 @@ public class CustomerController {
                 request.getMultiSelectValue()
         );
 
-        return ResponseEntity.ok(convertToSearchCriteriaResponse(criteria));
+        return ResponseEntity.ok(customerMapper.toSearchCriteriaResponse(criteria));
     }
 
     @GetMapping("/{id}/search-criteria")
@@ -162,7 +166,7 @@ public class CustomerController {
     public ResponseEntity<List<CustomerSearchCriteriaResponse>> getSearchCriteria(@PathVariable Long id) {
         List<CustomerSearchCriteria> criteria = customerService.getSearchCriteria(id);
         List<CustomerSearchCriteriaResponse> responses = criteria.stream()
-                .map(this::convertToSearchCriteriaResponse)
+                .map(this::customerMapper.toSearchCriteriaResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -183,7 +187,7 @@ public class CustomerController {
     public ResponseEntity<List<PropertyMatchResponse>> getMatchingProperties(@PathVariable Long id) {
         List<Property> matchingProperties = customerService.findMatchingProperties(id);
         List<PropertyMatchResponse> responses = matchingProperties.stream()
-                .map(this::convertToPropertyMatchResponse)
+                .map(this::customerMapper.toPropertyMatchResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -199,7 +203,7 @@ public class CustomerController {
 
         List<Customer> customers = customerService.searchCustomers(name, status, phone, email);
         List<CustomerResponse> responses = customers.stream()
-                .map(this::convertToCustomerResponse)
+                .map(customerMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -213,55 +217,10 @@ public class CustomerController {
 
         List<Customer> customers = customerService.getCustomersByBudgetRange(minBudget, maxBudget);
         List<CustomerResponse> responses = customers.stream()
-                .map(this::convertToCustomerResponse)
+                .map(customerMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
-    }
-
-    private CustomerResponse convertToCustomerResponse(Customer customer) {
-        return new CustomerResponse(
-                customer.getId(),
-                customer.getFirstName(),
-                customer.getLastName(),
-                customer.getPhone(),
-                customer.getEmail(),
-                customer.getBudgetMin(),
-                customer.getBudgetMax(),
-                customer.getNotes(),
-                customer.getLeadSource(),
-                customer.getStatus(),
-                customer.getAgent().getId(),
-                customer.getAgent().getFullName(),
-                customer.getCreatedDate(),
-                customer.getUpdatedDate()
-        );
-    }
-
-    private CustomerSearchCriteriaResponse convertToSearchCriteriaResponse(CustomerSearchCriteria criteria) {
-        return new CustomerSearchCriteriaResponse(
-                criteria.getId(),
-                criteria.getCustomer().getId(),
-                criteria.getAttribute().getId(),
-                criteria.getAttribute().getName(),
-                criteria.getAttribute().getDataType().toString(),
-                criteria.getTextValue(),
-                criteria.getNumberMinValue(),
-                criteria.getNumberMaxValue(),
-                criteria.getBooleanValue(),
-                criteria.getMultiSelectValue()
-        );
-    }
-
-    private PropertyMatchResponse convertToPropertyMatchResponse(Property property) {
-        return new PropertyMatchResponse(
-                property.getId(),
-                property.getTitle(),
-                property.getDescription(),
-                property.getPrice(),
-                property.getAgent().getFullName(),
-                property.getStatus().toString()
-        );
     }
 
     // Customer Notes Endpoints
@@ -276,7 +235,7 @@ public class CustomerController {
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
         CustomerNote note = customerService.createCustomerNote(id, currentUser, request.getContent());
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToCustomerNoteResponse(note));
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerMapper.toCustomerNoteResponse(note));
     }
 
     @GetMapping("/{id}/notes")
@@ -284,7 +243,7 @@ public class CustomerController {
     public ResponseEntity<List<CustomerNoteResponse>> getCustomerNotes(@PathVariable Long id) {
         List<CustomerNote> notes = customerService.getCustomerNotes(id);
         List<CustomerNoteResponse> responses = notes.stream()
-                .map(this::convertToCustomerNoteResponse)
+                .map(customerMapper::toCustomerNoteResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -325,7 +284,7 @@ public class CustomerController {
         }
 
         CustomerInteraction createdInteraction = customerService.createCustomerInteraction(id, currentUser, interaction);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToCustomerInteractionResponse(createdInteraction));
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerMapper.toCustomerInteractionResponse(createdInteraction));
     }
 
     @GetMapping("/{id}/interactions")
@@ -333,7 +292,7 @@ public class CustomerController {
     public ResponseEntity<List<CustomerInteractionResponse>> getCustomerInteractions(@PathVariable Long id) {
         List<CustomerInteraction> interactions = customerService.getCustomerInteractions(id);
         List<CustomerInteractionResponse> responses = interactions.stream()
-                .map(this::convertToCustomerInteractionResponse)
+                .map(customerMapper::toCustomerInteractionResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -347,44 +306,5 @@ public class CustomerController {
 
         customerService.deleteCustomerInteraction(interactionId);
         return ResponseEntity.ok(new MessageResponse("Customer interaction deleted successfully"));
-    }
-
-    // Converter Methods
-    private CustomerNoteResponse convertToCustomerNoteResponse(CustomerNote note) {
-        return new CustomerNoteResponse(
-                note.getId(),
-                note.getCustomer().getId(),
-                note.getCustomer().getFullName(),
-                note.getCreatedBy().getId(),
-                note.getCreatedBy().getFullName(),
-                note.getContent(),
-                note.getCreatedDate()
-        );
-    }
-
-    private CustomerInteractionResponse convertToCustomerInteractionResponse(CustomerInteraction interaction) {
-        String relatedPropertyTitle = null;
-        Long relatedPropertyId = null;
-
-        if (interaction.getRelatedProperty() != null) {
-            relatedPropertyId = interaction.getRelatedProperty().getId();
-            relatedPropertyTitle = interaction.getRelatedProperty().getTitle();
-        }
-
-        return new CustomerInteractionResponse(
-                interaction.getId(),
-                interaction.getCustomer().getId(),
-                interaction.getCustomer().getFullName(),
-                interaction.getUser().getId(),
-                interaction.getUser().getFullName(),
-                interaction.getType(),
-                interaction.getSubject(),
-                interaction.getNotes(),
-                interaction.getInteractionDate(),
-                interaction.getDurationMinutes(),
-                relatedPropertyId,
-                relatedPropertyTitle,
-                interaction.getCreatedDate()
-        );
     }
 }
