@@ -93,15 +93,7 @@ public class CustomerController {
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        Customer customer = new Customer();
-        customer.setFirstName(request.getFirstName());
-        customer.setLastName(request.getLastName());
-        customer.setPhone(request.getPhone());
-        customer.setEmail(request.getEmail());
-        customer.setBudgetMin(request.getBudgetMin());
-        customer.setBudgetMax(request.getBudgetMax());
-        customer.setNotes(request.getNotes());
-        customer.setLeadSource(request.getLeadSource());
+        Customer customer = customerMapper.toEntity(request);
         customer.setAgent(currentUser);
         customer.setStatus(CustomerStatus.LEAD);
 
@@ -115,17 +107,7 @@ public class CustomerController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateCustomerRequest request) {
 
-        Customer customer = new Customer();
-        customer.setFirstName(request.getFirstName());
-        customer.setLastName(request.getLastName());
-        customer.setPhone(request.getPhone());
-        customer.setEmail(request.getEmail());
-        customer.setBudgetMin(request.getBudgetMin());
-        customer.setBudgetMax(request.getBudgetMax());
-        customer.setNotes(request.getNotes());
-        customer.setLeadSource(request.getLeadSource());
-        customer.setStatus(request.getStatus());
-
+        Customer customer = customerMapper.toEntity(request);
         Customer updatedCustomer = customerService.updateCustomer(id, customer);
         return ResponseEntity.ok(customerMapper.toResponse(updatedCustomer));
     }
@@ -265,13 +247,7 @@ public class CustomerController {
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("Current user not found"));
 
-        CustomerInteraction interaction = new CustomerInteraction();
-        interaction.setType(request.getType());
-        interaction.setSubject(request.getSubject());
-        interaction.setNotes(request.getNotes());
-        interaction.setInteractionDate(request.getInteractionDate());
-        interaction.setDurationMinutes(request.getDurationMinutes());
-
+        CustomerInteraction interaction = customerMapper.toEntity(request);
         if (request.getRelatedPropertyId() != null) {
             Property property = new Property();
             property.setId(request.getRelatedPropertyId());

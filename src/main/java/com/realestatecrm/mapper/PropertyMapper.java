@@ -1,5 +1,7 @@
 package com.realestatecrm.mapper;
 
+import com.realestatecrm.dto.property.request.CreatePropertyRequest;
+import com.realestatecrm.dto.property.request.UpdatePropertyRequest;
 import com.realestatecrm.dto.property.response.AttributeValueResponse;
 import com.realestatecrm.dto.property.response.PropertyResponse;
 import com.realestatecrm.dto.property.response.PropertySharingResponse;
@@ -57,4 +59,31 @@ public interface PropertyMapper {
     @Mapping(target = "sharedByUserId", source = "sharedByUser.id")
     @Mapping(target = "sharedByUserName", expression = "java(sharing.getSharedByUser().getFullName())")
     PropertySharingResponse toPropertySharingResponse(PropertySharing sharing);
+
+    // ==================== Request to Entity Mappings ====================
+
+    /**
+     * Maps CreatePropertyRequest DTO to Property entity.
+     * Note: agent and status fields must be set manually by the controller.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "attributeValues", ignore = true)
+    @Mapping(target = "shares", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    Property toEntity(CreatePropertyRequest request);
+
+    /**
+     * Maps UpdatePropertyRequest DTO to Property entity.
+     * Note: agent field must be set manually by the controller if needed.
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "agent", ignore = true)
+    @Mapping(target = "attributeValues", ignore = true)
+    @Mapping(target = "shares", ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "updatedDate", ignore = true)
+    Property toEntity(UpdatePropertyRequest request);
 }

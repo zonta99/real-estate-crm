@@ -86,14 +86,7 @@ public class PropertyAttributeController {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<PropertyAttributeResponse> createAttribute(@Valid @RequestBody CreateAttributeRequest request) {
-        PropertyAttribute attribute = new PropertyAttribute();
-        attribute.setName(request.getName());
-        attribute.setDataType(request.getDataType());
-        attribute.setIsRequired(request.getIsRequired());
-        attribute.setIsSearchable(request.getIsSearchable());
-        attribute.setCategory(request.getCategory());
-        attribute.setDisplayOrder(request.getDisplayOrder());
-
+        PropertyAttribute attribute = attributeMapper.toEntity(request);
         PropertyAttribute createdAttribute = propertyAttributeService.createAttribute(attribute);
         return ResponseEntity.status(HttpStatus.CREATED).body(attributeMapper.toResponse(createdAttribute));
     }
@@ -105,14 +98,7 @@ public class PropertyAttributeController {
             @PathVariable Long id,
             @Valid @RequestBody UpdateAttributeRequest request) {
 
-        PropertyAttribute attribute = new PropertyAttribute();
-        attribute.setName(request.getName());
-        attribute.setDataType(request.getDataType());
-        attribute.setIsRequired(request.getIsRequired());
-        attribute.setIsSearchable(request.getIsSearchable());
-        attribute.setCategory(request.getCategory());
-        attribute.setDisplayOrder(request.getDisplayOrder());
-
+        PropertyAttribute attribute = attributeMapper.toEntity(request);
         PropertyAttribute updatedAttribute = propertyAttributeService.updateAttribute(id, attribute);
         return ResponseEntity.ok(attributeMapper.toResponse(updatedAttribute));
     }
