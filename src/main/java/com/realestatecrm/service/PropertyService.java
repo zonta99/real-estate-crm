@@ -1,7 +1,6 @@
 package com.realestatecrm.service;
 
 import com.realestatecrm.entity.*;
-import com.realestatecrm.enums.PropertyDataType;
 import com.realestatecrm.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -209,9 +208,8 @@ public class PropertyService {
                 }
                 case NUMBER -> {
                     // Be flexible: accept BigDecimal, any Number (Integer, Long, Double, etc.), or a numeric String
-                    if (!(value instanceof BigDecimal) &&
-                        !(value instanceof Number) &&
-                        !(value instanceof String && isNumericString((String) value))) {
+                    if (!(value instanceof Number) &&
+                            !(value instanceof String && isNumericString((String) value))) {
                         throw new IllegalArgumentException("Expected numeric value (BigDecimal/Number/String) for NUMBER type");
                     }
                     // Additionally, try coercion to validate convertibility
@@ -234,19 +232,20 @@ public class PropertyService {
     private BigDecimal coerceToBigDecimal(Object value) {
         if (value == null) return null;
         BigDecimal bd;
-        if (value instanceof BigDecimal b) {
-            bd = b;
-        } else if (value instanceof Number n) {
-            // Use String constructor to preserve exact representation
-            bd = new BigDecimal(n.toString());
-        } else if (value instanceof String s) {
-            String trimmed = s.trim();
-            if (!isNumericString(trimmed)) {
-                throw new IllegalArgumentException("Invalid numeric string: '" + s + "'");
+        switch (value) {
+            case BigDecimal b -> bd = b;
+            case Number n ->
+                // Use String constructor to preserve exact representation
+                    bd = new BigDecimal(n.toString());
+            case String s -> {
+                String trimmed = s.trim();
+                if (!isNumericString(trimmed)) {
+                    throw new IllegalArgumentException("Invalid numeric string: '" + s + "'");
+                }
+                bd = new BigDecimal(trimmed);
             }
-            bd = new BigDecimal(trimmed);
-        } else {
-            throw new IllegalArgumentException("Unsupported numeric value type: " + value.getClass().getSimpleName());
+            default ->
+                    throw new IllegalArgumentException("Unsupported numeric value type: " + value.getClass().getSimpleName());
         }
         // Normalize to the DB scale (2) with HALF_UP rounding to avoid persistence issues
         return bd.setScale(2, RoundingMode.HALF_UP);

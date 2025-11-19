@@ -2,7 +2,6 @@ package com.realestatecrm.controller;
 
 import com.realestatecrm.dto.common.MessageResponse;
 import com.realestatecrm.dto.property.response.PropertyResponse;
-import com.realestatecrm.dto.savedsearch.PropertySearchCriteriaRequest;
 import com.realestatecrm.dto.savedsearch.SavedSearchRequest;
 import com.realestatecrm.dto.savedsearch.SavedSearchResponse;
 import com.realestatecrm.entity.Customer;

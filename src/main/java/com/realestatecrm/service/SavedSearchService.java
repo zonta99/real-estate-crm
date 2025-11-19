@@ -9,7 +9,6 @@ import com.realestatecrm.dto.savedsearch.SavedSearchRequest;
 import com.realestatecrm.dto.savedsearch.SavedSearchResponse;
 import com.realestatecrm.dto.savedsearch.SearchFilterDTO;
 import com.realestatecrm.entity.*;
-import com.realestatecrm.enums.PropertyDataType;
 import com.realestatecrm.enums.PropertyStatus;
 import com.realestatecrm.mapper.SavedSearchMapper;
 import com.realestatecrm.repository.*;
@@ -40,10 +39,10 @@ public class SavedSearchService {
     /**
      * JSON Schema Version for saved search filters.
      * Current version: 1.0 - Initial schema with SearchFilterDTO structure.
-     *
+     * <p> <p>
      * Version History:
      * - 1.0 (current): Initial implementation with all 6 data types support
-     *
+     * <p> <p>
      * Future versions should maintain backward compatibility by:
      * 1. Adding new optional fields (not required)
      * 2. Providing default values for missing fields
@@ -196,14 +195,14 @@ public class SavedSearchService {
 
     /**
      * Execute a property search based on dynamic criteria.
-     *
+     * <p>
      * PERFORMANCE WARNING:
      * This method currently uses IN-MEMORY FILTERING which has significant limitations:
      * - Loads ALL ACTIVE properties into memory
      * - Applies filters in Java rather than at the database level
      * - Performance degrades with large datasets (10,000+ properties)
      * - Not suitable for production at scale
-     *
+     * <p>
      * OPTIMIZATION NEEDED (High Priority):
      * For production deployment with large property datasets, this method should be
      * rewritten to use JPA Criteria API or QueryDSL to build dynamic database queries.
@@ -212,11 +211,11 @@ public class SavedSearchService {
      * - Proper indexing utilization
      * - Better query performance (from O(n) to O(log n) with indexes)
      * - Reduced memory consumption
-     *
+     * <p>
      * CURRENT OPTIMIZATIONS:
      * - Batch fetching of AttributeValues to avoid N+1 queries
      * - Performance logging with warnings for slow queries (>1s)
-     *
+     * <p>
      * RECOMMENDED APPROACH FOR REFACTORING:
      * 1. Use JPA Criteria API with CriteriaBuilder
      * 2. Build JOIN queries to AttributeValue based on filters
