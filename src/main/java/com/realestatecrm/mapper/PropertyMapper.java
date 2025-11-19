@@ -21,19 +21,46 @@ public interface PropertyMapper {
 
     /**
      * Maps Property entity to PropertyResponse DTO (without attribute values).
+     * Uses default method to manually construct immutable PropertyResponse.
      */
-    @Mapping(target = "agentId", source = "agent.id")
-    @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
-    @Mapping(target = "attributeValues", ignore = true)
-    PropertyResponse toResponse(Property property);
+    default PropertyResponse toResponse(Property property) {
+        if (property == null) {
+            return null;
+        }
+        return new PropertyResponse(
+                property.getId(),
+                property.getTitle(),
+                property.getDescription(),
+                property.getPrice(),
+                property.getAgent().getId(),
+                property.getAgent().getFullName(),
+                property.getStatus(),
+                property.getCreatedDate(),
+                property.getUpdatedDate()
+        );
+    }
 
     /**
      * Maps Property entity to PropertyResponse DTO with attribute values.
+     * Uses default method to manually construct immutable PropertyResponse.
      */
-    @Mapping(target = "agentId", source = "property.agent.id")
-    @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
-    @Mapping(target = "attributeValues", source = "attributeValues")
-    PropertyResponse toResponseWithAttributes(Property property, List<AttributeValue> attributeValues);
+    default PropertyResponse toResponseWithAttributes(Property property, List<AttributeValue> attributeValues) {
+        if (property == null) {
+            return null;
+        }
+        return new PropertyResponse(
+                property.getId(),
+                property.getTitle(),
+                property.getDescription(),
+                property.getPrice(),
+                property.getAgent().getId(),
+                property.getAgent().getFullName(),
+                property.getStatus(),
+                property.getCreatedDate(),
+                property.getUpdatedDate(),
+                toAttributeValueResponseList(attributeValues)
+        );
+    }
 
     /**
      * Maps AttributeValue entity to AttributeValueResponse DTO.
@@ -70,7 +97,7 @@ public interface PropertyMapper {
     @Mapping(target = "agent", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "attributeValues", ignore = true)
-    @Mapping(target = "shares", ignore = true)
+    @Mapping(target = "propertySharing", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     Property toEntity(CreatePropertyRequest request);
@@ -82,7 +109,7 @@ public interface PropertyMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "agent", ignore = true)
     @Mapping(target = "attributeValues", ignore = true)
-    @Mapping(target = "shares", ignore = true)
+    @Mapping(target = "propertySharing", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     Property toEntity(UpdatePropertyRequest request);

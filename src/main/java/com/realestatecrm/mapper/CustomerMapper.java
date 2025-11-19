@@ -41,12 +41,11 @@ public interface CustomerMapper {
     /**
      * Maps Property entity to PropertyMatchResponse DTO for customer property matches.
      */
-    @Mapping(target = "propertyId", source = "id")
-    @Mapping(target = "propertyTitle", source = "title")
-    @Mapping(target = "propertyDescription", source = "description")
-    @Mapping(target = "propertyPrice", source = "price")
-    @Mapping(target = "propertyStatus", source = "status")
-    @Mapping(target = "agentId", source = "agent.id")
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "price", source = "price")
+    @Mapping(target = "status", source = "status")
     @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
     PropertyMatchResponse toPropertyMatchResponse(Property property);
 
@@ -82,8 +81,6 @@ public interface CustomerMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     @Mapping(target = "searchCriteria", ignore = true)
-    @Mapping(target = "notes", ignore = true)
-    @Mapping(target = "interactions", ignore = true)
     Customer toEntity(CreateCustomerRequest request);
 
     /**
@@ -95,8 +92,6 @@ public interface CustomerMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     @Mapping(target = "searchCriteria", ignore = true)
-    @Mapping(target = "notes", ignore = true)
-    @Mapping(target = "interactions", ignore = true)
     Customer toEntity(UpdateCustomerRequest request);
 
     /**
@@ -108,6 +103,5 @@ public interface CustomerMapper {
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "relatedProperty", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
-    @Mapping(target = "updatedDate", ignore = true)
     CustomerInteraction toEntity(CreateCustomerInteractionRequest request);
 }

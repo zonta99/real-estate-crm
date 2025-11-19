@@ -34,6 +34,8 @@ public interface PropertyAttributeMapper {
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "options", ignore = true)
+    @Mapping(target = "attributeValues", ignore = true)
+    @Mapping(target = "customerSearchCriteria", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     PropertyAttribute toEntity(CreateAttributeRequest request);
@@ -43,6 +45,8 @@ public interface PropertyAttributeMapper {
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "options", ignore = true)
+    @Mapping(target = "attributeValues", ignore = true)
+    @Mapping(target = "customerSearchCriteria", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
     PropertyAttribute toEntity(UpdateAttributeRequest request);
