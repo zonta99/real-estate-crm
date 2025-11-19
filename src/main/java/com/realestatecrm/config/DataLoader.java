@@ -121,58 +121,227 @@ public class DataLoader implements CommandLineRunner {
 
         // Create demo agents and properties with attribute values
         logger.info("Creating demo agents and properties...");
+
+        // Agent 1: Alice
         User alice = new User();
         alice.setUsername("alice");
         alice.setPassword(passwordEncoder.encode("password"));
         alice.setEmail("alice@realestatecrm.com");
         alice.setFirstName("Alice");
-        alice.setLastName("Agent");
+        alice.setLastName("Anderson");
         alice.setRole(Role.AGENT);
         alice.setStatus(UserStatus.ACTIVE);
         userRepository.save(alice);
 
+        // Broker 1: Bob
         User bob = new User();
         bob.setUsername("bob");
         bob.setPassword(passwordEncoder.encode("password"));
         bob.setEmail("bob@realestatecrm.com");
         bob.setFirstName("Bob");
-        bob.setLastName("Broker");
+        bob.setLastName("Martinez");
         bob.setRole(Role.BROKER);
         bob.setStatus(UserStatus.ACTIVE);
         userRepository.save(bob);
 
+        // Agent 2: Carol
+        User carol = new User();
+        carol.setUsername("carol");
+        carol.setPassword(passwordEncoder.encode("password"));
+        carol.setEmail("carol@realestatecrm.com");
+        carol.setFirstName("Carol");
+        carol.setLastName("Chen");
+        carol.setRole(Role.AGENT);
+        carol.setStatus(UserStatus.ACTIVE);
+        userRepository.save(carol);
+
+        // Agent 3: David
+        User david = new User();
+        david.setUsername("david");
+        david.setPassword(passwordEncoder.encode("password"));
+        david.setEmail("david@realestatecrm.com");
+        david.setFirstName("David");
+        david.setLastName("Thompson");
+        david.setRole(Role.AGENT);
+        david.setStatus(UserStatus.ACTIVE);
+        userRepository.save(david);
+
+        // Assistant: Emma
+        User emma = new User();
+        emma.setUsername("emma");
+        emma.setPassword(passwordEncoder.encode("password"));
+        emma.setEmail("emma@realestatecrm.com");
+        emma.setFirstName("Emma");
+        emma.setLastName("Rodriguez");
+        emma.setRole(Role.ASSISTANT);
+        emma.setStatus(UserStatus.ACTIVE);
+        userRepository.save(emma);
+
+        logger.info("Created 5 demo users (1 admin, 1 broker, 3 agents, 1 assistant)");
+
+        // Property 1: Cozy Family Home (Alice)
         Property p1 = new Property();
         p1.setTitle("Cozy Family Home");
-        p1.setDescription("3-bed, 2-bath cozy home near parks and schools.");
+        p1.setDescription("3-bed, 2-bath cozy home near parks and schools. Perfect for growing families.");
         p1.setPrice(new BigDecimal("350000"));
         p1.setAgent(alice);
         p1 = propertyRepository.save(p1);
+        setAttributeValueByName(p1, "City", "Springfield");
+        setAttributeValueByName(p1, "State", "IL");
+        setAttributeValueByName(p1, "ZIP Code", "62701");
+        setAttributeValueByName(p1, "Bedrooms", new BigDecimal("3"));
+        setAttributeValueByName(p1, "Bathrooms", new BigDecimal("2"));
+        setAttributeValueByName(p1, "Square Footage", new BigDecimal("1800"));
+        setAttributeValueByName(p1, "Property Type", "Single Family Home");
+        setAttributeValueByName(p1, "Has Garage", Boolean.TRUE);
+        setAttributeValueByName(p1, "Has Pool", Boolean.FALSE);
+        setAttributeValueByName(p1, "Year Built", new BigDecimal("2005"));
 
+        // Property 2: Modern Downtown Condo (Bob)
         Property p2 = new Property();
         p2.setTitle("Modern Downtown Condo");
-        p2.setDescription("Stylish 2-bed condo with city views and amenities.");
+        p2.setDescription("Stylish 2-bed condo with city views and amenities. Walking distance to everything.");
         p2.setPrice(new BigDecimal("525000"));
         p2.setAgent(bob);
         p2 = propertyRepository.save(p2);
-
-        // Set a few attribute values for the properties
-        setAttributeValueByName(p1, "City", "Springfield");
-        setAttributeValueByName(p1, "Bedrooms", new BigDecimal("3"));
-        setAttributeValueByName(p1, "Property Type", "Single Family Home");
-        setAttributeValueByName(p1, "Has Garage", Boolean.TRUE);
-
         setAttributeValueByName(p2, "City", "Metropolis");
+        setAttributeValueByName(p2, "State", "NY");
+        setAttributeValueByName(p2, "ZIP Code", "10001");
         setAttributeValueByName(p2, "Bedrooms", new BigDecimal("2"));
+        setAttributeValueByName(p2, "Bathrooms", new BigDecimal("2"));
+        setAttributeValueByName(p2, "Square Footage", new BigDecimal("1200"));
         setAttributeValueByName(p2, "Property Type", "Condo");
         setAttributeValueByName(p2, "Has Garage", Boolean.FALSE);
+        setAttributeValueByName(p2, "Has Pool", Boolean.TRUE);
+        setAttributeValueByName(p2, "Year Built", new BigDecimal("2018"));
 
-        // Share p1 with Bob as a demo
-        PropertySharing share = new PropertySharing(p1, bob, alice);
-        propertySharingRepository.save(share);
-        logger.info("Demo agents, properties, and attribute values created!");
+        // Property 3: Luxury Beachfront Villa (Carol)
+        Property p3 = new Property();
+        p3.setTitle("Luxury Beachfront Villa");
+        p3.setDescription("5-bed, 4-bath oceanfront paradise with private beach access. Stunning sunset views.");
+        p3.setPrice(new BigDecimal("1850000"));
+        p3.setAgent(carol);
+        p3 = propertyRepository.save(p3);
+        setAttributeValueByName(p3, "City", "Miami Beach");
+        setAttributeValueByName(p3, "State", "FL");
+        setAttributeValueByName(p3, "ZIP Code", "33139");
+        setAttributeValueByName(p3, "Bedrooms", new BigDecimal("5"));
+        setAttributeValueByName(p3, "Bathrooms", new BigDecimal("4"));
+        setAttributeValueByName(p3, "Square Footage", new BigDecimal("4500"));
+        setAttributeValueByName(p3, "Property Type", "Single Family Home");
+        setAttributeValueByName(p3, "Has Garage", Boolean.TRUE);
+        setAttributeValueByName(p3, "Garage Spaces", new BigDecimal("3"));
+        setAttributeValueByName(p3, "Has Pool", Boolean.TRUE);
+        setAttributeValueByName(p3, "Has Hot Tub/Spa", Boolean.TRUE);
+        setAttributeValueByName(p3, "Year Built", new BigDecimal("2020"));
+
+        // Property 4: Charming Townhouse (David)
+        Property p4 = new Property();
+        p4.setTitle("Charming Townhouse");
+        p4.setDescription("2-bed, 2.5-bath townhouse in quiet neighborhood. Move-in ready!");
+        p4.setPrice(new BigDecimal("285000"));
+        p4.setAgent(david);
+        p4 = propertyRepository.save(p4);
+        setAttributeValueByName(p4, "City", "Portland");
+        setAttributeValueByName(p4, "State", "OR");
+        setAttributeValueByName(p4, "ZIP Code", "97201");
+        setAttributeValueByName(p4, "Bedrooms", new BigDecimal("2"));
+        setAttributeValueByName(p4, "Bathrooms", new BigDecimal("2"));
+        setAttributeValueByName(p4, "Half Bathrooms", new BigDecimal("1"));
+        setAttributeValueByName(p4, "Square Footage", new BigDecimal("1400"));
+        setAttributeValueByName(p4, "Property Type", "Townhouse");
+        setAttributeValueByName(p4, "Has Garage", Boolean.TRUE);
+        setAttributeValueByName(p4, "Year Built", new BigDecimal("2015"));
+
+        // Property 5: Mountain Retreat Cabin (Alice)
+        Property p5 = new Property();
+        p5.setTitle("Mountain Retreat Cabin");
+        p5.setDescription("3-bed, 2-bath rustic cabin with mountain views. Perfect getaway!");
+        p5.setPrice(new BigDecimal("425000"));
+        p5.setAgent(alice);
+        p5 = propertyRepository.save(p5);
+        setAttributeValueByName(p5, "City", "Aspen");
+        setAttributeValueByName(p5, "State", "CO");
+        setAttributeValueByName(p5, "ZIP Code", "81611");
+        setAttributeValueByName(p5, "Bedrooms", new BigDecimal("3"));
+        setAttributeValueByName(p5, "Bathrooms", new BigDecimal("2"));
+        setAttributeValueByName(p5, "Square Footage", new BigDecimal("2000"));
+        setAttributeValueByName(p5, "Property Type", "Single Family Home");
+        setAttributeValueByName(p5, "Has Garage", Boolean.TRUE);
+        setAttributeValueByName(p5, "Has Fireplace", Boolean.TRUE);
+        setAttributeValueByName(p5, "Year Built", new BigDecimal("2010"));
+
+        // Property 6: Starter Home (Carol)
+        Property p6 = new Property();
+        p6.setTitle("Affordable Starter Home");
+        p6.setDescription("2-bed, 1-bath perfect for first-time buyers. Great investment opportunity.");
+        p6.setPrice(new BigDecimal("189000"));
+        p6.setAgent(carol);
+        p6 = propertyRepository.save(p6);
+        setAttributeValueByName(p6, "City", "Austin");
+        setAttributeValueByName(p6, "State", "TX");
+        setAttributeValueByName(p6, "ZIP Code", "78701");
+        setAttributeValueByName(p6, "Bedrooms", new BigDecimal("2"));
+        setAttributeValueByName(p6, "Bathrooms", new BigDecimal("1"));
+        setAttributeValueByName(p6, "Square Footage", new BigDecimal("950"));
+        setAttributeValueByName(p6, "Property Type", "Single Family Home");
+        setAttributeValueByName(p6, "Has Garage", Boolean.FALSE);
+        setAttributeValueByName(p6, "Year Built", new BigDecimal("1998"));
+
+        // Property 7: Suburban Family Home (Bob)
+        Property p7 = new Property();
+        p7.setTitle("Spacious Suburban Home");
+        p7.setDescription("4-bed, 3-bath home with large backyard. Top-rated school district!");
+        p7.setPrice(new BigDecimal("475000"));
+        p7.setAgent(bob);
+        p7 = propertyRepository.save(p7);
+        setAttributeValueByName(p7, "City", "Charlotte");
+        setAttributeValueByName(p7, "State", "NC");
+        setAttributeValueByName(p7, "ZIP Code", "28202");
+        setAttributeValueByName(p7, "Bedrooms", new BigDecimal("4"));
+        setAttributeValueByName(p7, "Bathrooms", new BigDecimal("3"));
+        setAttributeValueByName(p7, "Square Footage", new BigDecimal("2800"));
+        setAttributeValueByName(p7, "Property Type", "Single Family Home");
+        setAttributeValueByName(p7, "Has Garage", Boolean.TRUE);
+        setAttributeValueByName(p7, "Garage Spaces", new BigDecimal("2"));
+        setAttributeValueByName(p7, "Has Pool", Boolean.TRUE);
+        setAttributeValueByName(p7, "Year Built", new BigDecimal("2012"));
+
+        // Property 8: Urban Loft (David)
+        Property p8 = new Property();
+        p8.setTitle("Industrial Urban Loft");
+        p8.setDescription("1-bed, 1-bath loft with exposed brick and high ceilings. Artistic vibe!");
+        p8.setPrice(new BigDecimal("395000"));
+        p8.setAgent(david);
+        p8 = propertyRepository.save(p8);
+        setAttributeValueByName(p8, "City", "Seattle");
+        setAttributeValueByName(p8, "State", "WA");
+        setAttributeValueByName(p8, "ZIP Code", "98101");
+        setAttributeValueByName(p8, "Bedrooms", new BigDecimal("1"));
+        setAttributeValueByName(p8, "Bathrooms", new BigDecimal("1"));
+        setAttributeValueByName(p8, "Square Footage", new BigDecimal("850"));
+        setAttributeValueByName(p8, "Property Type", "Condo");
+        setAttributeValueByName(p8, "Has Garage", Boolean.FALSE);
+        setAttributeValueByName(p8, "Year Built", new BigDecimal("2016"));
+
+        logger.info("Created 8 diverse properties with detailed attributes");
+
+        // Share properties between agents
+        PropertySharing share1 = new PropertySharing(p1, bob, alice);
+        propertySharingRepository.save(share1);
+
+        PropertySharing share2 = new PropertySharing(p3, alice, carol);
+        propertySharingRepository.save(share2);
+
+        PropertySharing share3 = new PropertySharing(p7, david, bob);
+        propertySharingRepository.save(share3);
+
+        logger.info("Created 3 property sharing relationships");
 
         // Create demo customers
         logger.info("Creating demo customers...");
+
+        // Customer 1: John Smith - Mid-range family buyer
         Customer customer1 = new Customer();
         customer1.setFirstName("John");
         customer1.setLastName("Smith");
@@ -180,33 +349,107 @@ public class DataLoader implements CommandLineRunner {
         customer1.setPhone("555-0101");
         customer1.setBudgetMin(new BigDecimal("300000"));
         customer1.setBudgetMax(new BigDecimal("450000"));
+        customer1.setNotes("Looking for family home with 3+ bedrooms. Needs good school district.");
+        customer1.setLeadSource("Website Inquiry");
         customer1.setAgent(alice);
         customer1 = customerRepository.save(customer1);
 
+        // Customer 2: Sarah Johnson - Luxury buyer
         Customer customer2 = new Customer();
         customer2.setFirstName("Sarah");
         customer2.setLastName("Johnson");
         customer2.setEmail("sarah.johnson@example.com");
         customer2.setPhone("555-0102");
-        customer2.setBudgetMin(new BigDecimal("400000"));
-        customer2.setBudgetMax(new BigDecimal("600000"));
-        customer2.setAgent(bob);
+        customer2.setBudgetMin(new BigDecimal("800000"));
+        customer2.setBudgetMax(new BigDecimal("2000000"));
+        customer2.setNotes("High net worth client. Interested in waterfront properties with luxury amenities.");
+        customer2.setLeadSource("Referral");
+        customer2.setAgent(carol);
         customer2 = customerRepository.save(customer2);
 
+        // Customer 3: Michael Williams - First-time buyer
         Customer customer3 = new Customer();
         customer3.setFirstName("Michael");
         customer3.setLastName("Williams");
         customer3.setEmail("michael.williams@example.com");
         customer3.setPhone("555-0103");
-        customer3.setBudgetMin(new BigDecimal("200000"));
-        customer3.setBudgetMax(new BigDecimal("350000"));
+        customer3.setBudgetMin(new BigDecimal("150000"));
+        customer3.setBudgetMax(new BigDecimal("250000"));
+        customer3.setNotes("First-time buyer. Pre-approved for FHA loan. Looking for starter home.");
+        customer3.setLeadSource("Open House");
         customer3.setAgent(alice);
         customer3 = customerRepository.save(customer3);
-        logger.info("Demo customers created!");
+
+        // Customer 4: Jennifer Davis - Urban professional
+        Customer customer4 = new Customer();
+        customer4.setFirstName("Jennifer");
+        customer4.setLastName("Davis");
+        customer4.setEmail("jennifer.davis@example.com");
+        customer4.setPhone("555-0104");
+        customer4.setBudgetMin(new BigDecimal("350000"));
+        customer4.setBudgetMax(new BigDecimal("550000"));
+        customer4.setNotes("Young professional. Wants downtown condo with modern amenities.");
+        customer4.setLeadSource("Social Media");
+        customer4.setAgent(bob);
+        customer4 = customerRepository.save(customer4);
+
+        // Customer 5: Robert & Lisa Martinez - Growing family
+        Customer customer5 = new Customer();
+        customer5.setFirstName("Robert");
+        customer5.setLastName("Martinez");
+        customer5.setEmail("rmartinez@example.com");
+        customer5.setPhone("555-0105");
+        customer5.setBudgetMin(new BigDecimal("450000"));
+        customer5.setBudgetMax(new BigDecimal("650000"));
+        customer5.setNotes("Family with 2 kids. Need 4+ bedrooms, good schools, backyard for kids.");
+        customer5.setLeadSource("Client Referral");
+        customer5.setAgent(david);
+        customer5 = customerRepository.save(customer5);
+
+        // Customer 6: Emily Thompson - Downsizing retiree
+        Customer customer6 = new Customer();
+        customer6.setFirstName("Emily");
+        customer6.setLastName("Thompson");
+        customer6.setEmail("emily.thompson@example.com");
+        customer6.setPhone("555-0106");
+        customer6.setBudgetMin(new BigDecimal("250000"));
+        customer6.setBudgetMax(new BigDecimal("400000"));
+        customer6.setNotes("Retiree downsizing. Single-level preferred. Low maintenance.");
+        customer6.setLeadSource("Walk-in");
+        customer6.setAgent(carol);
+        customer6 = customerRepository.save(customer6);
+
+        // Customer 7: David Park - Investment buyer
+        Customer customer7 = new Customer();
+        customer7.setFirstName("David");
+        customer7.setLastName("Park");
+        customer7.setEmail("david.park@example.com");
+        customer7.setPhone("555-0107");
+        customer7.setBudgetMin(new BigDecimal("200000"));
+        customer7.setBudgetMax(new BigDecimal("400000"));
+        customer7.setNotes("Real estate investor. Looking for rental properties with good ROI.");
+        customer7.setLeadSource("Investor Network");
+        customer7.setAgent(bob);
+        customer7 = customerRepository.save(customer7);
+
+        // Customer 8: Amanda White - Vacation home buyer
+        Customer customer8 = new Customer();
+        customer8.setFirstName("Amanda");
+        customer8.setLastName("White");
+        customer8.setEmail("amanda.white@example.com");
+        customer8.setPhone("555-0108");
+        customer8.setBudgetMin(new BigDecimal("300000"));
+        customer8.setBudgetMax(new BigDecimal("600000"));
+        customer8.setNotes("Looking for vacation home in mountain or beach area. Weekends and summer use.");
+        customer8.setLeadSource("Website Inquiry");
+        customer8.setAgent(alice);
+        customer8 = customerRepository.save(customer8);
+
+        logger.info("Created 8 diverse demo customers with varying budgets and preferences");
 
         // Create sample saved searches
         logger.info("Creating sample saved searches...");
-        createSampleSavedSearches(customer1, customer2, customer3);
+        createSampleSavedSearches(customer1, customer2, customer3, customer4, customer5, customer6, customer7, customer8);
         logger.info("Sample saved searches created!");
     }
 
@@ -441,7 +684,9 @@ public class DataLoader implements CommandLineRunner {
         }
     }
 
-    private void createSampleSavedSearches(Customer customer1, Customer customer2, Customer customer3) {
+    private void createSampleSavedSearches(Customer customer1, Customer customer2, Customer customer3,
+                                           Customer customer4, Customer customer5, Customer customer6,
+                                           Customer customer7, Customer customer8) {
         try {
             // Get commonly used attributes
             PropertyAttribute bedroomsAttr = getAttributeByName("Bedrooms");
@@ -570,7 +815,258 @@ public class DataLoader implements CommandLineRunner {
                     "Properties with modern appliances and covered parking",
                     modernFilters);
 
-            logger.info("Created 5 sample saved searches for 3 customers demonstrating all filter types");
+            // Search 6: Urban Condos (Customer4 - Jennifer) - Location + Type + BOOLEAN
+            PropertyAttribute viewAttr = getAttributeByName("View");
+            List<SearchFilterDTO> urbanFilters = new ArrayList<>();
+
+            SearchFilterDTO urbanTypeFilter = new SearchFilterDTO();
+            urbanTypeFilter.setAttributeId(propertyTypeAttr.getId());
+            urbanTypeFilter.setDataType(PropertyDataType.SINGLE_SELECT);
+            urbanTypeFilter.setSelectedValues(List.of("Condo"));
+            urbanFilters.add(urbanTypeFilter);
+
+            SearchFilterDTO cityViewFilter = new SearchFilterDTO();
+            cityViewFilter.setAttributeId(viewAttr.getId());
+            cityViewFilter.setDataType(PropertyDataType.MULTI_SELECT);
+            cityViewFilter.setSelectedValues(List.of("City"));
+            urbanFilters.add(cityViewFilter);
+
+            SearchFilterDTO airConditioningFilter = new SearchFilterDTO();
+            airConditioningFilter.setAttributeId(getAttributeByName("Central Air Conditioning").getId());
+            airConditioningFilter.setDataType(PropertyDataType.BOOLEAN);
+            airConditioningFilter.setBooleanValue(true);
+            urbanFilters.add(airConditioningFilter);
+
+            createSavedSearch(customer4, "Urban Living",
+                    "Downtown condos with city views and AC",
+                    urbanFilters);
+
+            // Search 7: Large Family Homes (Customer5 - Robert Martinez)
+            List<SearchFilterDTO> largeFamilyFilters = new ArrayList<>();
+
+            SearchFilterDTO largeBedrooms = new SearchFilterDTO();
+            largeBedrooms.setAttributeId(bedroomsAttr.getId());
+            largeBedrooms.setDataType(PropertyDataType.NUMBER);
+            largeBedrooms.setMinValue(new BigDecimal("4"));
+            largeFamilyFilters.add(largeBedrooms);
+
+            SearchFilterDTO multipleBaths = new SearchFilterDTO();
+            multipleBaths.setAttributeId(bathroomsAttr.getId());
+            multipleBaths.setDataType(PropertyDataType.NUMBER);
+            multipleBaths.setMinValue(new BigDecimal("2.5"));
+            largeFamilyFilters.add(multipleBaths);
+
+            SearchFilterDTO largeGarage = new SearchFilterDTO();
+            largeGarage.setAttributeId(getAttributeByName("Garage Spaces").getId());
+            largeGarage.setDataType(PropertyDataType.NUMBER);
+            largeGarage.setMinValue(new BigDecimal("2"));
+            largeFamilyFilters.add(largeGarage);
+
+            createSavedSearch(customer5, "Family Dream Home",
+                    "Large homes for growing family (4+BR, 2.5+BA, 2-car garage)",
+                    largeFamilyFilters);
+
+            // Search 8: Single-Level Homes (Customer6 - Emily Thompson - Retiree)
+            PropertyAttribute storiesAttr = getAttributeByName("Stories");
+            List<SearchFilterDTO> singleLevelFilters = new ArrayList<>();
+
+            SearchFilterDTO oneStory = new SearchFilterDTO();
+            oneStory.setAttributeId(storiesAttr.getId());
+            oneStory.setDataType(PropertyDataType.NUMBER);
+            oneStory.setMaxValue(new BigDecimal("1"));
+            singleLevelFilters.add(oneStory);
+
+            SearchFilterDTO retireeBedroomsFilter = new SearchFilterDTO();
+            retireeBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            retireeBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            retireeBedroomsFilter.setMinValue(new BigDecimal("2"));
+            retireeBedroomsFilter.setMaxValue(new BigDecimal("3"));
+            singleLevelFilters.add(retireeBedroomsFilter);
+
+            createSavedSearch(customer6, "Single-Level Living",
+                    "One-story homes perfect for retirement (2-3BR)",
+                    singleLevelFilters);
+
+            // Search 9: Investment Properties (Customer7 - David Park)
+            PropertyAttribute yearBuiltAttr = getAttributeByName("Year Built");
+            List<SearchFilterDTO> investmentFilters = new ArrayList<>();
+
+            SearchFilterDTO investmentBedroomsFilter = new SearchFilterDTO();
+            investmentBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            investmentBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            investmentBedroomsFilter.setMinValue(new BigDecimal("2"));
+            investmentBedroomsFilter.setMaxValue(new BigDecimal("4"));
+            investmentFilters.add(investmentBedroomsFilter);
+
+            SearchFilterDTO investmentSqftFilter = new SearchFilterDTO();
+            investmentSqftFilter.setAttributeId(squareFootageAttr.getId());
+            investmentSqftFilter.setDataType(PropertyDataType.NUMBER);
+            investmentSqftFilter.setMinValue(new BigDecimal("1000"));
+            investmentSqftFilter.setMaxValue(new BigDecimal("2000"));
+            investmentFilters.add(investmentSqftFilter);
+
+            SearchFilterDTO newerConstructionFilter = new SearchFilterDTO();
+            newerConstructionFilter.setAttributeId(yearBuiltAttr.getId());
+            newerConstructionFilter.setDataType(PropertyDataType.NUMBER);
+            newerConstructionFilter.setMinValue(new BigDecimal("2000"));
+            investmentFilters.add(newerConstructionFilter);
+
+            createSavedSearch(customer7, "Rental Investments",
+                    "Properties suitable for rental (2-4BR, 1000-2000sqft, post-2000)",
+                    investmentFilters);
+
+            // Search 10: Beach/Mountain Vacation Homes (Customer8 - Amanda White)
+            List<SearchFilterDTO> vacationFilters = new ArrayList<>();
+
+            SearchFilterDTO vacationBedroomsFilter = new SearchFilterDTO();
+            vacationBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            vacationBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            vacationBedroomsFilter.setMinValue(new BigDecimal("3"));
+            vacationFilters.add(vacationBedroomsFilter);
+
+            SearchFilterDTO scenicViewFilter = new SearchFilterDTO();
+            scenicViewFilter.setAttributeId(viewAttr.getId());
+            scenicViewFilter.setDataType(PropertyDataType.MULTI_SELECT);
+            scenicViewFilter.setSelectedValues(List.of("Ocean", "Mountain", "Lake"));
+            vacationFilters.add(scenicViewFilter);
+
+            SearchFilterDTO vacationPoolFilter = new SearchFilterDTO();
+            vacationPoolFilter.setAttributeId(hasPoolAttr.getId());
+            vacationPoolFilter.setDataType(PropertyDataType.BOOLEAN);
+            vacationPoolFilter.setBooleanValue(true);
+            vacationFilters.add(vacationPoolFilter);
+
+            createSavedSearch(customer8, "Vacation Getaway",
+                    "Scenic vacation homes with pool (3+BR, ocean/mountain/lake view)",
+                    vacationFilters);
+
+            // Search 11: Sarah's Beachfront Search
+            PropertyAttribute propertyStatusAttr = getAttributeByName("Property Status");
+            List<SearchFilterDTO> beachfrontFilters = new ArrayList<>();
+
+            SearchFilterDTO beachViewFilter = new SearchFilterDTO();
+            beachViewFilter.setAttributeId(viewAttr.getId());
+            beachViewFilter.setDataType(PropertyDataType.MULTI_SELECT);
+            beachViewFilter.setSelectedValues(List.of("Ocean"));
+            beachfrontFilters.add(beachViewFilter);
+
+            SearchFilterDTO luxuryBedroomsFilter = new SearchFilterDTO();
+            luxuryBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            luxuryBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            luxuryBedroomsFilter.setMinValue(new BigDecimal("4"));
+            beachfrontFilters.add(luxuryBedroomsFilter);
+
+            SearchFilterDTO activeStatusFilter = new SearchFilterDTO();
+            activeStatusFilter.setAttributeId(propertyStatusAttr.getId());
+            activeStatusFilter.setDataType(PropertyDataType.SINGLE_SELECT);
+            activeStatusFilter.setSelectedValues(List.of("Active"));
+            beachfrontFilters.add(activeStatusFilter);
+
+            createSavedSearch(customer2, "Beachfront Luxury Estates",
+                    "High-end oceanfront properties (4+BR, active listings)",
+                    beachfrontFilters);
+
+            // Search 12: Customer3's Affordable Options
+            List<SearchFilterDTO> affordableFilters = new ArrayList<>();
+
+            SearchFilterDTO affordableBedroomsFilter = new SearchFilterDTO();
+            affordableBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            affordableBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            affordableBedroomsFilter.setMinValue(new BigDecimal("2"));
+            affordableBedroomsFilter.setMaxValue(new BigDecimal("3"));
+            affordableFilters.add(affordableBedroomsFilter);
+
+            SearchFilterDTO affordableSqftFilter = new SearchFilterDTO();
+            affordableSqftFilter.setAttributeId(squareFootageAttr.getId());
+            affordableSqftFilter.setDataType(PropertyDataType.NUMBER);
+            affordableSqftFilter.setMaxValue(new BigDecimal("1500"));
+            affordableFilters.add(affordableSqftFilter);
+
+            SearchFilterDTO affordableTypeFilter = new SearchFilterDTO();
+            affordableTypeFilter.setAttributeId(propertyTypeAttr.getId());
+            affordableTypeFilter.setDataType(PropertyDataType.SINGLE_SELECT);
+            affordableTypeFilter.setSelectedValues(List.of("Single Family Home", "Townhouse", "Condo"));
+            affordableFilters.add(affordableTypeFilter);
+
+            createSavedSearch(customer3, "Budget-Friendly Homes",
+                    "Affordable starter homes (2-3BR, under 1500sqft, various types)",
+                    affordableFilters);
+
+            // Search 13: Customer1's Pool Home Search
+            List<SearchFilterDTO> poolHomeFilters = new ArrayList<>();
+
+            SearchFilterDTO poolBedroomsFilter = new SearchFilterDTO();
+            poolBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            poolBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            poolBedroomsFilter.setMinValue(new BigDecimal("3"));
+            poolBedroomsFilter.setMaxValue(new BigDecimal("4"));
+            poolHomeFilters.add(poolBedroomsFilter);
+
+            SearchFilterDTO mustHavePoolFilter = new SearchFilterDTO();
+            mustHavePoolFilter.setAttributeId(hasPoolAttr.getId());
+            mustHavePoolFilter.setDataType(PropertyDataType.BOOLEAN);
+            mustHavePoolFilter.setBooleanValue(true);
+            poolHomeFilters.add(mustHavePoolFilter);
+
+            SearchFilterDTO backyardFilter = new SearchFilterDTO();
+            backyardFilter.setAttributeId(getAttributeByName("Has Deck/Patio").getId());
+            backyardFilter.setDataType(PropertyDataType.BOOLEAN);
+            backyardFilter.setBooleanValue(true);
+            poolHomeFilters.add(backyardFilter);
+
+            createSavedSearch(customer1, "Summer Fun Homes",
+                    "Family homes with pool and outdoor space (3-4BR, pool, deck/patio)",
+                    poolHomeFilters);
+
+            // Search 14: Customer4's Second Option - Walk to Work
+            PropertyAttribute walkabilityAttr = getAttributeByName("Walkability Score");
+            List<SearchFilterDTO> walkableFilters = new ArrayList<>();
+
+            SearchFilterDTO walkableBedroomsFilter = new SearchFilterDTO();
+            walkableBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            walkableBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            walkableBedroomsFilter.setMinValue(new BigDecimal("1"));
+            walkableBedroomsFilter.setMaxValue(new BigDecimal("2"));
+            walkableFilters.add(walkableBedroomsFilter);
+
+            SearchFilterDTO highWalkabilityFilter = new SearchFilterDTO();
+            highWalkabilityFilter.setAttributeId(walkabilityAttr.getId());
+            highWalkabilityFilter.setDataType(PropertyDataType.NUMBER);
+            highWalkabilityFilter.setMinValue(new BigDecimal("80"));
+            walkableFilters.add(highWalkabilityFilter);
+
+            createSavedSearch(customer4, "Walkable Urban Living",
+                    "Highly walkable urban properties (1-2BR, walkability 80+)",
+                    walkableFilters);
+
+            // Search 15: Customer5's School District Focus
+            PropertyAttribute schoolDistrictAttr = getAttributeByName("School District");
+            PropertyAttribute specialRoomsAttr = getAttributeByName("Special Rooms");
+            List<SearchFilterDTO> schoolFocusFilters = new ArrayList<>();
+
+            SearchFilterDTO schoolBedroomsFilter = new SearchFilterDTO();
+            schoolBedroomsFilter.setAttributeId(bedroomsAttr.getId());
+            schoolBedroomsFilter.setDataType(PropertyDataType.NUMBER);
+            schoolBedroomsFilter.setMinValue(new BigDecimal("4"));
+            schoolFocusFilters.add(schoolBedroomsFilter);
+
+            SearchFilterDTO familyTypeFilter = new SearchFilterDTO();
+            familyTypeFilter.setAttributeId(propertyTypeAttr.getId());
+            familyTypeFilter.setDataType(PropertyDataType.SINGLE_SELECT);
+            familyTypeFilter.setSelectedValues(List.of("Single Family Home"));
+            schoolFocusFilters.add(familyTypeFilter);
+
+            SearchFilterDTO homeOfficeFilter = new SearchFilterDTO();
+            homeOfficeFilter.setAttributeId(specialRoomsAttr.getId());
+            homeOfficeFilter.setDataType(PropertyDataType.MULTI_SELECT);
+            homeOfficeFilter.setSelectedValues(List.of("Home Office"));
+            schoolFocusFilters.add(homeOfficeFilter);
+
+            createSavedSearch(customer5, "Family Homes with Office",
+                    "Single-family homes for remote work (4+BR, home office)",
+                    schoolFocusFilters);
+
+            logger.info("Created 15 comprehensive saved searches for 8 customers demonstrating all filter types and real-world scenarios");
 
         } catch (Exception e) {
             logger.error("Error creating sample saved searches: {}", e.getMessage(), e);
