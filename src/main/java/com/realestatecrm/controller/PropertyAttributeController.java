@@ -11,6 +11,7 @@ import com.realestatecrm.entity.PropertyAttribute;
 import com.realestatecrm.entity.PropertyAttributeOption;
 import com.realestatecrm.enums.PropertyCategory;
 import com.realestatecrm.service.PropertyAttributeService;
+import com.realestatecrm.mapper.PropertyAttributeMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,10 +28,12 @@ import java.util.stream.Collectors;
 public class PropertyAttributeController {
 
     private final PropertyAttributeService propertyAttributeService;
+    private final PropertyAttributeMapper attributeMapper;
 
     @Autowired
-    public PropertyAttributeController(PropertyAttributeService propertyAttributeService) {
+    public PropertyAttributeController(PropertyAttributeService propertyAttributeService, PropertyAttributeMapper attributeMapper) {
         this.propertyAttributeService = propertyAttributeService;
+        this.attributeMapper = attributeMapper;
     }
 
     @GetMapping
@@ -39,7 +42,7 @@ public class PropertyAttributeController {
     public ResponseEntity<List<PropertyAttributeResponse>> getAllAttributes() {
         List<PropertyAttribute> attributes = propertyAttributeService.getAllAttributes();
         List<PropertyAttributeResponse> responses = attributes.stream()
-                .map(this::convertToAttributeResponse)
+                .map(attributeMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -51,7 +54,7 @@ public class PropertyAttributeController {
     public ResponseEntity<List<PropertyAttributeResponse>> getSearchableAttributes() {
         List<PropertyAttribute> attributes = propertyAttributeService.getSearchableAttributes();
         List<PropertyAttributeResponse> responses = attributes.stream()
-                .map(this::convertToAttributeResponse)
+                .map(attributeMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -63,7 +66,7 @@ public class PropertyAttributeController {
     public ResponseEntity<List<PropertyAttributeResponse>> getAttributesByCategory(@PathVariable PropertyCategory category) {
         List<PropertyAttribute> attributes = propertyAttributeService.getAttributesByCategory(category);
         List<PropertyAttributeResponse> responses = attributes.stream()
-                .map(this::convertToAttributeResponse)
+                .map(attributeMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -76,7 +79,7 @@ public class PropertyAttributeController {
         PropertyAttribute attribute = propertyAttributeService.getAttributeById(id)
                 .orElseThrow(() -> new RuntimeException("Property attribute not found with id: " + id));
 
-        return ResponseEntity.ok(convertToAttributeResponse(attribute));
+        return ResponseEntity.ok(attributeMapper.toResponse(attribute));
     }
 
     @PostMapping
@@ -92,7 +95,7 @@ public class PropertyAttributeController {
         attribute.setDisplayOrder(request.getDisplayOrder());
 
         PropertyAttribute createdAttribute = propertyAttributeService.createAttribute(attribute);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToAttributeResponse(createdAttribute));
+        return ResponseEntity.status(HttpStatus.CREATED).body(attributeMapper.toResponse(createdAttribute));
     }
 
     @PutMapping("/{id}")
@@ -111,7 +114,7 @@ public class PropertyAttributeController {
         attribute.setDisplayOrder(request.getDisplayOrder());
 
         PropertyAttribute updatedAttribute = propertyAttributeService.updateAttribute(id, attribute);
-        return ResponseEntity.ok(convertToAttributeResponse(updatedAttribute));
+        return ResponseEntity.ok(attributeMapper.toResponse(updatedAttribute));
     }
 
     @DeleteMapping("/{id}")
@@ -134,7 +137,7 @@ public class PropertyAttributeController {
                 request.getDisplayOrder()
         );
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToOptionResponse(option));
+        return ResponseEntity.status(HttpStatus.CREATED).body(attributeMapper.toOptionResponse(option));
     }
 
     @GetMapping("/{id}/options")
@@ -142,7 +145,7 @@ public class PropertyAttributeController {
     public ResponseEntity<List<AttributeOptionResponse>> getAttributeOptions(@PathVariable Long id) {
         List<PropertyAttributeOption> options = propertyAttributeService.getAttributeOptions(id);
         List<AttributeOptionResponse> responses = options.stream()
-                .map(this::convertToOptionResponse)
+                .map(attributeMapper::toOptionResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -164,36 +167,4 @@ public class PropertyAttributeController {
         propertyAttributeService.reorderAttributes(category, request.getAttributeIds());
         return ResponseEntity.ok(new MessageResponse("Attributes reordered successfully"));
     }
-
-    private PropertyAttributeResponse convertToAttributeResponse(PropertyAttribute attribute) {
-        List<AttributeOptionResponse> options = null;
-        if (attribute.getOptions() != null && !attribute.getOptions().isEmpty()) {
-            options = attribute.getOptions().stream()
-                    .map(this::convertToOptionResponse)
-                    .collect(Collectors.toList());
-        }
-
-        return new PropertyAttributeResponse(
-                attribute.getId(),
-                attribute.getName(),
-                attribute.getDataType().toString(),
-                attribute.getIsRequired(),
-                attribute.getIsSearchable(),
-                attribute.getCategory().toString(),
-                attribute.getDisplayOrder(),
-                attribute.getCreatedDate(),
-                attribute.getUpdatedDate(),
-                options
-        );
-    }
-
-    private AttributeOptionResponse convertToOptionResponse(PropertyAttributeOption option) {
-        return new AttributeOptionResponse(
-                option.getId(),
-                option.getAttribute().getId(),
-                option.getOptionValue(),
-                option.getDisplayOrder()
-        );
-    }
-    
 }

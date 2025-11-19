@@ -8,9 +8,12 @@ import com.realestatecrm.dto.property.request.UpdatePropertyRequest;
 import com.realestatecrm.dto.property.response.PropertyResponse;
 import com.realestatecrm.dto.property.response.PropertySharingResponse;
 import com.realestatecrm.dto.property.response.AttributeValueResponse;
+import com.realestatecrm.dto.savedsearch.PropertySearchCriteriaRequest;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.PropertyStatus;
+import com.realestatecrm.mapper.PropertyMapper;
 import com.realestatecrm.service.PropertyService;
+import com.realestatecrm.service.SavedSearchService;
 import com.realestatecrm.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -38,11 +41,16 @@ public class PropertyController {
 
     private final PropertyService propertyService;
     private final UserService userService;
+    private final SavedSearchService savedSearchService;
+    private final PropertyMapper propertyMapper;
 
     @Autowired
-    public PropertyController(PropertyService propertyService, UserService userService) {
+    public PropertyController(PropertyService propertyService, UserService userService,
+                            SavedSearchService savedSearchService, PropertyMapper propertyMapper) {
         this.propertyService = propertyService;
         this.userService = userService;
+        this.savedSearchService = savedSearchService;
+        this.propertyMapper = propertyMapper;
     }
 
     @GetMapping
@@ -67,7 +75,7 @@ public class PropertyController {
             properties = propertyService.getPropertiesByAgents(userIds, pageable);
         }
 
-        Page<PropertyResponse> response = properties.map(this::convertToPropertyResponse);
+        Page<PropertyResponse> response = properties.map(propertyMapper::toResponse);
         return ResponseEntity.ok(response);
     }
 
@@ -79,7 +87,7 @@ public class PropertyController {
                 .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
 
         // Return basic property info without attributes for better performance
-        return ResponseEntity.ok(convertToPropertyResponse(property));
+        return ResponseEntity.ok(propertyMapper.toResponse(property));
     }
 
     @GetMapping("/{id}/with-attributes")
@@ -90,7 +98,8 @@ public class PropertyController {
                 .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
 
         // Return complete property info including all dynamic attributes
-        return ResponseEntity.ok(convertToPropertyResponseWithAttributes(property));
+        List<AttributeValue> values = propertyService.getAttributeValues(property.getId());
+        return ResponseEntity.ok(propertyMapper.toResponseWithAttributes(property, values));
     }
 
     @PostMapping
@@ -110,7 +119,7 @@ public class PropertyController {
         property.setStatus(PropertyStatus.ACTIVE);
 
         Property createdProperty = propertyService.createProperty(property);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToPropertyResponse(createdProperty));
+        return ResponseEntity.status(HttpStatus.CREATED).body(propertyMapper.toResponse(createdProperty));
     }
 
     @PutMapping("/{id}")
@@ -126,7 +135,7 @@ public class PropertyController {
         property.setStatus(request.getStatus());
 
         Property updatedProperty = propertyService.updateProperty(id, property);
-        return ResponseEntity.ok(convertToPropertyResponse(updatedProperty));
+        return ResponseEntity.ok(propertyMapper.toResponse(updatedProperty));
     }
 
     @DeleteMapping("/{id}")
@@ -149,7 +158,7 @@ public class PropertyController {
                 request.getValue()
         );
 
-        return ResponseEntity.ok(convertToAttributeValueResponse(value));
+        return ResponseEntity.ok(propertyMapper.toAttributeValueResponse(value));
     }
 
     @GetMapping("/{id}/values")
@@ -158,7 +167,7 @@ public class PropertyController {
     public ResponseEntity<List<AttributeValueResponse>> getAttributeValues(@PathVariable Long id) {
         List<AttributeValue> values = propertyService.getAttributeValues(id);
         List<AttributeValueResponse> responses = values.stream()
-                .map(this::convertToAttributeValueResponse)
+                .map(propertyMapper::toAttributeValueResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -203,7 +212,7 @@ public class PropertyController {
     public ResponseEntity<List<PropertySharingResponse>> getPropertySharing(@PathVariable Long id) {
         List<PropertySharing> sharing = propertyService.getPropertySharing(id);
         List<PropertySharingResponse> responses = sharing.stream()
-                .map(this::convertToPropertySharingResponse)
+                .map(propertyMapper::toPropertySharingResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
@@ -231,66 +240,24 @@ public class PropertyController {
         }
 
         List<PropertyResponse> responses = properties.stream()
-                .map(this::convertToPropertyResponse)
+                .map(propertyMapper::toResponse)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(responses);
     }
 
-    private PropertyResponse convertToPropertyResponse(Property property) {
-        return new PropertyResponse(
-                property.getId(),
-                property.getTitle(),
-                property.getDescription(),
-                property.getPrice(),
-                property.getAgent().getId(),
-                property.getAgent().getFullName(),
-                property.getStatus(),
-                property.getCreatedDate(),
-                property.getUpdatedDate()
-        );
-    }
+    @PostMapping("/search/by-criteria")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<?> searchPropertiesByCriteria(
+            @Valid @RequestBody PropertySearchCriteriaRequest request) {
 
-    private PropertyResponse convertToPropertyResponseWithAttributes(Property property) {
-        List<AttributeValue> values = propertyService.getAttributeValues(property.getId());
-        List<AttributeValueResponse> valueResponses = values.stream()
-                .map(this::convertToAttributeValueResponse)
-                .collect(Collectors.toList());
-
-        return new PropertyResponse(
-                property.getId(),
-                property.getTitle(),
-                property.getDescription(),
-                property.getPrice(),
-                property.getAgent().getId(),
-                property.getAgent().getFullName(),
-                property.getStatus(),
-                property.getCreatedDate(),
-                property.getUpdatedDate(),
-                valueResponses
-        );
-    }
-
-    private AttributeValueResponse convertToAttributeValueResponse(AttributeValue value) {
-        return new AttributeValueResponse(
-                value.getId(),
-                value.getProperty().getId(),
-                value.getAttribute().getId(),
-                value.getAttribute().getName(),
-                value.getAttribute().getDataType(),
-                value.getValue()
-        );
-    }
-
-    private PropertySharingResponse convertToPropertySharingResponse(PropertySharing sharing) {
-        return new PropertySharingResponse(
-                sharing.getId(),
-                sharing.getProperty().getId(),
-                sharing.getSharedWithUser().getId(),
-                sharing.getSharedWithUser().getFullName(),
-                sharing.getSharedByUser().getId(),
-                sharing.getSharedByUser().getFullName(),
-                sharing.getCreatedDate()
-        );
+        try {
+            Page<Property> properties = savedSearchService.executeSearch(request);
+            Page<PropertyResponse> response = properties.map(this::convertToPropertyResponse);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        }
     }
 }
