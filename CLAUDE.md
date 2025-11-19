@@ -340,12 +340,13 @@ Response (DTO/JSON)
       │ has
       ↓ N
 ┌──────────────────────────┐
-│ CustomerSearchCriteria   │ (Property preferences)
+│ SavedSearch              │ (Named property searches)
 ├──────────────────────────┤
 │ id                       │
 │ customer                 │ → Customer
-│ attribute                │ → PropertyAttribute
-│ value                    │
+│ name                     │
+│ description              │
+│ filtersJson              │ (JSON array of filters)
 └──────────────────────────┘
 ```
 
@@ -391,7 +392,7 @@ enum InteractionType {
 - **Property → PropertySharing**: One-to-Many (sharing with other users)
 - **PropertyAttribute → AttributeValues**: One-to-Many
 - **PropertyAttribute → PropertyAttributeOptions**: One-to-Many
-- **Customer → CustomerSearchCriteria**: One-to-Many
+- **Customer → SavedSearch**: One-to-Many (named property searches)
 - **Customer → CustomerInteractions**: One-to-Many
 - **Customer → CustomerNotes**: One-to-Many
 

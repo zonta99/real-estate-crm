@@ -69,7 +69,7 @@ public class Customer {
 
     // Relationships
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CustomerSearchCriteria> searchCriteria;
+    private List<SavedSearch> savedSearches;
 
     // Constructors
     public Customer() {}
@@ -121,8 +121,8 @@ public class Customer {
     public LocalDateTime getUpdatedDate() { return updatedDate; }
     public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
 
-    public List<CustomerSearchCriteria> getSearchCriteria() { return searchCriteria; }
-    public void setSearchCriteria(List<CustomerSearchCriteria> searchCriteria) { this.searchCriteria = searchCriteria; }
+    public List<SavedSearch> getSavedSearches() { return savedSearches; }
+    public void setSavedSearches(List<SavedSearch> savedSearches) { this.savedSearches = savedSearches; }
 
     public String getFullName() {
         return firstName + " " + lastName;

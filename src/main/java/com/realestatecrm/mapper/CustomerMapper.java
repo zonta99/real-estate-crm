@@ -6,13 +6,9 @@ import com.realestatecrm.dto.customer.request.UpdateCustomerRequest;
 import com.realestatecrm.dto.customer.response.CustomerInteractionResponse;
 import com.realestatecrm.dto.customer.response.CustomerNoteResponse;
 import com.realestatecrm.dto.customer.response.CustomerResponse;
-import com.realestatecrm.dto.customer.response.CustomerSearchCriteriaResponse;
-import com.realestatecrm.dto.customer.response.PropertyMatchResponse;
 import com.realestatecrm.entity.Customer;
 import com.realestatecrm.entity.CustomerInteraction;
 import com.realestatecrm.entity.CustomerNote;
-import com.realestatecrm.entity.CustomerSearchCriteria;
-import com.realestatecrm.entity.Property;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -28,26 +24,6 @@ public interface CustomerMapper {
     @Mapping(target = "agentId", source = "agent.id")
     @Mapping(target = "agentName", expression = "java(customer.getAgent().getFullName())")
     CustomerResponse toResponse(Customer customer);
-
-    /**
-     * Maps CustomerSearchCriteria entity to CustomerSearchCriteriaResponse DTO.
-     */
-    @Mapping(target = "customerId", source = "customer.id")
-    @Mapping(target = "attributeId", source = "attribute.id")
-    @Mapping(target = "attributeName", source = "attribute.name")
-    @Mapping(target = "dataType", expression = "java(criteria.getAttribute().getDataType().toString())")
-    CustomerSearchCriteriaResponse toSearchCriteriaResponse(CustomerSearchCriteria criteria);
-
-    /**
-     * Maps Property entity to PropertyMatchResponse DTO for customer property matches.
-     */
-    @Mapping(target = "id", source = "id")
-    @Mapping(target = "title", source = "title")
-    @Mapping(target = "description", source = "description")
-    @Mapping(target = "price", source = "price")
-    @Mapping(target = "status", source = "status")
-    @Mapping(target = "agentName", expression = "java(property.getAgent().getFullName())")
-    PropertyMatchResponse toPropertyMatchResponse(Property property);
 
     /**
      * Maps CustomerNote entity to CustomerNoteResponse DTO.
@@ -80,7 +56,7 @@ public interface CustomerMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
-    @Mapping(target = "searchCriteria", ignore = true)
+    @Mapping(target = "savedSearches", ignore = true)
     Customer toEntity(CreateCustomerRequest request);
 
     /**
@@ -91,7 +67,7 @@ public interface CustomerMapper {
     @Mapping(target = "agent", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "updatedDate", ignore = true)
-    @Mapping(target = "searchCriteria", ignore = true)
+    @Mapping(target = "savedSearches", ignore = true)
     Customer toEntity(UpdateCustomerRequest request);
 
     /**
