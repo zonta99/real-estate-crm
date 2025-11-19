@@ -20,31 +20,19 @@ import java.util.stream.Collectors;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
-    private final CustomerSearchCriteriaRepository searchCriteriaRepository;
     private final PropertyRepository propertyRepository;
-    private final AttributeValueRepository attributeValueRepository;
-    private final PropertyAttributeRepository propertyAttributeRepository;
     private final CustomerNoteRepository customerNoteRepository;
     private final CustomerInteractionRepository customerInteractionRepository;
-    /*private final UserRepository userRepository;*/
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository,
-                           CustomerSearchCriteriaRepository searchCriteriaRepository,
                            PropertyRepository propertyRepository,
-                           AttributeValueRepository attributeValueRepository,
-                           PropertyAttributeRepository propertyAttributeRepository,
                            CustomerNoteRepository customerNoteRepository,
-                           CustomerInteractionRepository customerInteractionRepository,
-                           UserRepository userRepository) {
+                           CustomerInteractionRepository customerInteractionRepository) {
         this.customerRepository = customerRepository;
-        this.searchCriteriaRepository = searchCriteriaRepository;
         this.propertyRepository = propertyRepository;
-        this.attributeValueRepository = attributeValueRepository;
-        this.propertyAttributeRepository = propertyAttributeRepository;
         this.customerNoteRepository = customerNoteRepository;
         this.customerInteractionRepository = customerInteractionRepository;
-        //this.userRepository = userRepository;
     }
 
     @Transactional(readOnly = true)
@@ -126,66 +114,6 @@ public class CustomerService {
         customerRepository.deleteById(id);
     }
 
-    public CustomerSearchCriteria setSearchCriteria(Long customerId, Long attributeId,
-                                                    String textValue, BigDecimal numberMinValue,
-                                                    BigDecimal numberMaxValue, Boolean booleanValue,
-                                                    String multiSelectValue) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + customerId));
-
-        PropertyAttribute attribute = propertyAttributeRepository.findById(attributeId)
-                .orElseThrow(() -> new EntityNotFoundException("Attribute not found with id: " + attributeId));
-
-        Optional<CustomerSearchCriteria> existingCriteria = searchCriteriaRepository
-                .findByCustomerIdAndAttributeId(customerId, attributeId);
-
-        CustomerSearchCriteria criteria = existingCriteria.orElse(new CustomerSearchCriteria(customer, attribute));
-
-        // Clear all values first
-        criteria.setTextValue(null);
-        criteria.setNumberMinValue(null);
-        criteria.setNumberMaxValue(null);
-        criteria.setBooleanValue(null);
-        criteria.setMultiSelectValue(null);
-
-        // Set appropriate value based on attribute type
-        switch (attribute.getDataType()) {
-            case TEXT, SINGLE_SELECT -> criteria.setTextValue(textValue);
-            case NUMBER -> {
-                criteria.setNumberMinValue(numberMinValue);
-                criteria.setNumberMaxValue(numberMaxValue);
-            }
-            case BOOLEAN -> criteria.setBooleanValue(booleanValue);
-            case MULTI_SELECT -> criteria.setMultiSelectValue(multiSelectValue);
-        }
-
-        return searchCriteriaRepository.save(criteria);
-    }
-
-    @Transactional(readOnly = true)
-    public List<CustomerSearchCriteria> getSearchCriteria(Long customerId) {
-        return searchCriteriaRepository.findByCustomerId(customerId);
-    }
-
-    public void deleteSearchCriteria(Long customerId, Long attributeId) {
-        searchCriteriaRepository.deleteByCustomerIdAndAttributeId(customerId, attributeId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Property> findMatchingProperties(Long customerId) {
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + customerId));
-
-        List<CustomerSearchCriteria> searchCriteria = searchCriteriaRepository
-                .findSearchableCriteriaByCustomerId(customerId);
-
-        List<Property> allProperties = propertyRepository.findAll();
-
-        return allProperties.stream()
-                .filter(property -> matchesAllCriteria(property, customer, searchCriteria))
-                .collect(Collectors.toList());
-    }
-
     @Transactional(readOnly = true)
     public List<Customer> searchCustomers(String name, CustomerStatus status, String phone, String email) {
         if (name != null && !name.trim().isEmpty()) {
@@ -208,87 +136,6 @@ public class CustomerService {
         return customerRepository.findAll().stream()
                 .filter(customer -> isWithinBudgetRange(customer, minBudget, maxBudget))
                 .collect(Collectors.toList());
-    }
-
-    private boolean matchesAllCriteria(Property property, Customer customer, List<CustomerSearchCriteria> searchCriteria) {
-        // Check budget constraints first
-        if (!isWithinBudget(property.getPrice(), customer.getBudgetMin(), customer.getBudgetMax())) {
-            return false;
-        }
-
-        // Check each search criteria
-        for (CustomerSearchCriteria criteria : searchCriteria) {
-            if (!matchesCriteria(property, criteria)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private boolean matchesCriteria(Property property, CustomerSearchCriteria criteria) {
-        Optional<AttributeValue> attributeValue = attributeValueRepository
-                .findByPropertyIdAndAttributeId(property.getId(), criteria.getAttribute().getId());
-
-        if (attributeValue.isEmpty()) {
-            return false; // Property doesn't have this attribute value
-        }
-
-        AttributeValue value = attributeValue.get();
-
-        return switch (criteria.getAttribute().getDataType()) {
-            //TODO - implement date range matching
-            
-            case TEXT, SINGLE_SELECT,DATE -> matchesTextCriteria(value.getTextValue(), criteria.getTextValue());
-            case NUMBER ->
-                    matchesNumberCriteria(value.getNumberValue(), criteria.getNumberMinValue(), criteria.getNumberMaxValue());
-            case BOOLEAN -> matchesBooleanCriteria(value.getBooleanValue(), criteria.getBooleanValue());
-            case MULTI_SELECT ->
-                    matchesMultiSelectCriteria(value.getMultiSelectValue(), criteria.getMultiSelectValue());
-        };
-    }
-
-    private boolean matchesTextCriteria(String propertyValue, String criteriaValue) {
-        if (criteriaValue == null) return true;
-        return criteriaValue.equalsIgnoreCase(propertyValue);
-    }
-
-    private boolean matchesNumberCriteria(BigDecimal propertyValue, BigDecimal minValue, BigDecimal maxValue) {
-        if (propertyValue == null) return false;
-
-        if (minValue != null && propertyValue.compareTo(minValue) < 0) {
-            return false;
-        }
-
-        if (maxValue != null && propertyValue.compareTo(maxValue) > 0) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean matchesBooleanCriteria(Boolean propertyValue, Boolean criteriaValue) {
-        if (criteriaValue == null) return true;
-        return criteriaValue.equals(propertyValue);
-    }
-
-    private boolean matchesMultiSelectCriteria(String propertyValue, String criteriaValue) {
-        if (criteriaValue == null || propertyValue == null) return true;
-
-        // Simple contains check - in a real implementation, you'd parse JSON arrays
-        return propertyValue.contains(criteriaValue);
-    }
-
-    private boolean isWithinBudget(BigDecimal price, BigDecimal minBudget, BigDecimal maxBudget) {
-        if (minBudget != null && price.compareTo(minBudget) < 0) {
-            return false;
-        }
-
-        if (maxBudget != null && price.compareTo(maxBudget) > 0) {
-            return false;
-        }
-
-        return true;
     }
 
     private boolean isWithinBudgetRange(Customer customer, BigDecimal minBudget, BigDecimal maxBudget) {

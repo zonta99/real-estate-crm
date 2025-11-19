@@ -120,12 +120,6 @@ public class PropertyAttributeService {
                     "' because it is used by " + attribute.getAttributeValues().size() + " properties");
         }
 
-        // Check if attribute is used in customer search criteria
-        if (!attribute.getCustomerSearchCriteria().isEmpty()) {
-            throw new IllegalArgumentException("Cannot delete attribute '" + attribute.getName() +
-                    "' because it is used in " + attribute.getCustomerSearchCriteria().size() + " customer search criteria");
-        }
-
         propertyAttributeRepository.deleteById(id);
     }
 

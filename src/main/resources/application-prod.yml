@@ -52,8 +52,10 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
     name: logs/real-estate-crm.log
-    max-size: 10MB
-    max-history: 30
+  logback:
+    rollingpolicy:
+      max-history: 30
+      max-file-size: 10MB
 
 # Management Endpoints - Restricted in production
 management:
@@ -64,7 +66,7 @@ management:
   endpoint:
     health:
       show-details: when-authorized  # Only show details to authorized users
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true

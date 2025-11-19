@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * Search filter DTO for property searches.
  * JSON Schema Version: 1.0
- *
- * @JsonIgnoreProperties ensures backward compatibility when new fields are added
+ * <p>
+ * {@code @JsonIgnoreProperties} ensures backward compatibility when new fields are added
  * in future schema versions.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)

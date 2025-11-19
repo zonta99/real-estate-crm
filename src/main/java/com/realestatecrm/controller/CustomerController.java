@@ -4,13 +4,10 @@ import com.realestatecrm.dto.common.MessageResponse;
 import com.realestatecrm.dto.customer.request.CreateCustomerRequest;
 import com.realestatecrm.dto.customer.request.CreateCustomerInteractionRequest;
 import com.realestatecrm.dto.customer.request.CreateCustomerNoteRequest;
-import com.realestatecrm.dto.customer.request.SetSearchCriteriaRequest;
 import com.realestatecrm.dto.customer.request.UpdateCustomerRequest;
 import com.realestatecrm.dto.customer.response.CustomerInteractionResponse;
 import com.realestatecrm.dto.customer.response.CustomerNoteResponse;
 import com.realestatecrm.dto.customer.response.CustomerResponse;
-import com.realestatecrm.dto.customer.response.CustomerSearchCriteriaResponse;
-import com.realestatecrm.dto.customer.response.PropertyMatchResponse;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.CustomerStatus;
 import com.realestatecrm.mapper.CustomerMapper;
@@ -117,57 +114,6 @@ public class CustomerController {
     public ResponseEntity<MessageResponse> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.ok(new MessageResponse("Customer deleted successfully"));
-    }
-
-    @PostMapping("/{id}/search-criteria")
-    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<CustomerSearchCriteriaResponse> setSearchCriteria(
-            @PathVariable Long id,
-            @Valid @RequestBody SetSearchCriteriaRequest request) {
-
-        CustomerSearchCriteria criteria = customerService.setSearchCriteria(
-                id,
-                request.getAttributeId(),
-                request.getTextValue(),
-                request.getNumberMinValue(),
-                request.getNumberMaxValue(),
-                request.getBooleanValue(),
-                request.getMultiSelectValue()
-        );
-
-        return ResponseEntity.ok(customerMapper.toSearchCriteriaResponse(criteria));
-    }
-
-    @GetMapping("/{id}/search-criteria")
-    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<List<CustomerSearchCriteriaResponse>> getSearchCriteria(@PathVariable Long id) {
-        List<CustomerSearchCriteria> criteria = customerService.getSearchCriteria(id);
-        List<CustomerSearchCriteriaResponse> responses = criteria.stream()
-                .map(customerMapper::toSearchCriteriaResponse)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(responses);
-    }
-
-    @DeleteMapping("/{id}/search-criteria/{attributeId}")
-    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<MessageResponse> deleteSearchCriteria(
-            @PathVariable Long id,
-            @PathVariable Long attributeId) {
-
-        customerService.deleteSearchCriteria(id, attributeId);
-        return ResponseEntity.ok(new MessageResponse("Search criteria deleted successfully"));
-    }
-
-    @GetMapping({"/{id}/matching-properties", "/{id}/matches"})
-    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
-    public ResponseEntity<List<PropertyMatchResponse>> getMatchingProperties(@PathVariable Long id) {
-        List<Property> matchingProperties = customerService.findMatchingProperties(id);
-        List<PropertyMatchResponse> responses = matchingProperties.stream()
-                .map(customerMapper::toPropertyMatchResponse)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/search")

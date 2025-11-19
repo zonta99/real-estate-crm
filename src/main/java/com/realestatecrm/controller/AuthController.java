@@ -1,5 +1,6 @@
 package com.realestatecrm.controller;
 
+import com.realestatecrm.dto.auth.request.RefreshTokenRequest;
 import com.realestatecrm.entity.Permission;
 import com.realestatecrm.entity.RefreshToken;
 import com.realestatecrm.entity.User;
