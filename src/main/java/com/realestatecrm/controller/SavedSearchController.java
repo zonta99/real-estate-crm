@@ -8,6 +8,7 @@ import com.realestatecrm.dto.savedsearch.SavedSearchResponse;
 import com.realestatecrm.entity.Customer;
 import com.realestatecrm.entity.Property;
 import com.realestatecrm.entity.User;
+import com.realestatecrm.mapper.PropertyMapper;
 import com.realestatecrm.service.CustomerService;
 import com.realestatecrm.service.SavedSearchService;
 import com.realestatecrm.service.UserService;
@@ -33,14 +34,17 @@ public class SavedSearchController {
     private final SavedSearchService savedSearchService;
     private final CustomerService customerService;
     private final UserService userService;
+    private final PropertyMapper propertyMapper;
 
     @Autowired
     public SavedSearchController(SavedSearchService savedSearchService,
                                  CustomerService customerService,
-                                 UserService userService) {
+                                 UserService userService,
+                                 PropertyMapper propertyMapper) {
         this.savedSearchService = savedSearchService;
         this.customerService = customerService;
         this.userService = userService;
+        this.propertyMapper = propertyMapper;
     }
 
     // Get all saved searches for the current agent's customers
@@ -203,7 +207,7 @@ public class SavedSearchController {
 
         try {
             Page<Property> properties = savedSearchService.executeSavedSearch(id, currentUser.getId(), page, size, sort);
-            Page<PropertyResponse> response = properties.map(this::convertToPropertyResponse);
+            Page<PropertyResponse> response = properties.map(propertyMapper::toResponse);
             return ResponseEntity.ok(response);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -215,19 +219,5 @@ public class SavedSearchController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new MessageResponse(e.getMessage()));
         }
-    }
-
-    private PropertyResponse convertToPropertyResponse(Property property) {
-        return new PropertyResponse(
-                property.getId(),
-                property.getTitle(),
-                property.getDescription(),
-                property.getPrice(),
-                property.getAgent().getId(),
-                property.getAgent().getFullName(),
-                property.getStatus(),
-                property.getCreatedDate(),
-                property.getUpdatedDate()
-        );
     }
 }

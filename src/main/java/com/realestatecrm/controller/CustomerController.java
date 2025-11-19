@@ -86,7 +86,7 @@ public class CustomerController {
         Customer customer = customerService.getCustomerById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found with id: " + id));
 
-        return ResponseEntity.ok(convertToCustomerResponse(customer));
+        return ResponseEntity.ok(customerMapper.toResponse(customer));
     }
 
     @PostMapping
@@ -111,7 +111,7 @@ public class CustomerController {
         customer.setStatus(CustomerStatus.LEAD);
 
         Customer createdCustomer = customerService.createCustomer(customer);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToCustomerResponse(createdCustomer));
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerMapper.toResponse(createdCustomer));
     }
 
     @PutMapping("/{id}")

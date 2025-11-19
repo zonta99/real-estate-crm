@@ -3,6 +3,7 @@ package com.realestatecrm.controller;
 import com.realestatecrm.entity.Permission;
 import com.realestatecrm.entity.RefreshToken;
 import com.realestatecrm.entity.User;
+import com.realestatecrm.mapper.UserInfoMapper;
 import com.realestatecrm.security.JwtUtils;
 import com.realestatecrm.service.CustomUserDetailsService;
 import com.realestatecrm.service.RefreshTokenService;
@@ -25,7 +26,6 @@ import com.realestatecrm.dto.auth.response.*;
 import com.realestatecrm.dto.common.MessageResponse;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,6 +36,7 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final PermissionService permissionService;
     private final RefreshTokenService refreshTokenService;
+    private final UserInfoMapper userInfoMapper;
 
     @Value("${jwt.expiration:86400000}") // 24 hours default
     private int jwtExpirationMs;
@@ -45,12 +46,14 @@ public class AuthController {
                           AuthenticationManager authenticationManager,
                           JwtUtils jwtUtils,
                           PermissionService permissionService,
-                          RefreshTokenService refreshTokenService) {
+                          RefreshTokenService refreshTokenService,
+                          UserInfoMapper userInfoMapper) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.permissionService = permissionService;
         this.refreshTokenService = refreshTokenService;
+        this.userInfoMapper = userInfoMapper;
     }
 
     @PostMapping("/login")
@@ -71,17 +74,7 @@ public class AuthController {
         // SECURITY FIX: Create proper refresh token
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-        UserInfo userInfo = new UserInfo(
-                user.getId().toString(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                List.of("ROLE_" + user.getRole().name()),
-                user.getStatus().name(),
-                user.getCreatedDate().toString(),
-                user.getUpdatedDate().toString()
-        );
+        UserInfo userInfo = userInfoMapper.toUserInfo(user);
 
         return ResponseEntity.ok(new LoginResponse(
                 jwt,
@@ -132,17 +125,7 @@ public class AuthController {
         User user = userService.getUserByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        UserInfo userInfo = new UserInfo(
-                user.getId().toString(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                List.of("ROLE_" + user.getRole().name()),
-                user.getStatus().name(),
-                user.getCreatedDate().toString(),
-                user.getUpdatedDate().toString()
-        );
+        UserInfo userInfo = userInfoMapper.toUserInfo(user);
 
         return ResponseEntity.ok(userInfo);
     }
@@ -162,19 +145,7 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<User> subordinates = userService.getDirectSubordinates(user.getId());
-        List<UserInfo> subordinateInfos = subordinates.stream()
-                .map(sub -> new UserInfo(
-                        sub.getId().toString(),
-                        sub.getUsername(),
-                        sub.getEmail(),
-                        sub.getFirstName(),
-                        sub.getLastName(),
-                        List.of("ROLE_" + sub.getRole().name()),
-                        sub.getStatus().name(),
-                        sub.getCreatedDate().toString(),
-                        sub.getUpdatedDate().toString()
-                ))
-                .collect(Collectors.toList());
+        List<UserInfo> subordinateInfos = userInfoMapper.toUserInfoList(subordinates);
 
         return ResponseEntity.ok(subordinateInfos);
     }

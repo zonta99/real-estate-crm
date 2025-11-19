@@ -253,7 +253,7 @@ public class PropertyController {
 
         try {
             Page<Property> properties = savedSearchService.executeSearch(request);
-            Page<PropertyResponse> response = properties.map(this::convertToPropertyResponse);
+            Page<PropertyResponse> response = properties.map(propertyMapper::toResponse);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
