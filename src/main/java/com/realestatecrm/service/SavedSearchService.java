@@ -11,6 +11,7 @@ import com.realestatecrm.dto.savedsearch.SearchFilterDTO;
 import com.realestatecrm.entity.*;
 import com.realestatecrm.enums.PropertyDataType;
 import com.realestatecrm.enums.PropertyStatus;
+import com.realestatecrm.mapper.SavedSearchMapper;
 import com.realestatecrm.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -61,6 +62,7 @@ public class SavedSearchService {
     private final PropertyRepository propertyRepository;
     private final AttributeValueRepository attributeValueRepository;
     private final PropertyAttributeRepository propertyAttributeRepository;
+    private final SavedSearchMapper savedSearchMapper;
     private final ObjectMapper objectMapper;
 
     @Autowired
@@ -68,12 +70,14 @@ public class SavedSearchService {
                               CustomerRepository customerRepository,
                               PropertyRepository propertyRepository,
                               AttributeValueRepository attributeValueRepository,
-                              PropertyAttributeRepository propertyAttributeRepository) {
+                              PropertyAttributeRepository propertyAttributeRepository,
+                              SavedSearchMapper savedSearchMapper) {
         this.savedSearchRepository = savedSearchRepository;
         this.customerRepository = customerRepository;
         this.propertyRepository = propertyRepository;
         this.attributeValueRepository = attributeValueRepository;
         this.propertyAttributeRepository = propertyAttributeRepository;
+        this.savedSearchMapper = savedSearchMapper;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.registerModule(new JavaTimeModule());
     }
@@ -81,28 +85,28 @@ public class SavedSearchService {
     @Transactional(readOnly = true)
     public List<SavedSearchResponse> getAllSavedSearches() {
         return savedSearchRepository.findAllWithCustomer().stream()
-                .map(this::convertToResponse)
+                .map(savedSearchMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<SavedSearchResponse> getSavedSearchesByCustomer(Long customerId) {
         return savedSearchRepository.findByCustomerIdWithCustomer(customerId).stream()
-                .map(this::convertToResponse)
+                .map(savedSearchMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<SavedSearchResponse> getSavedSearchesByAgent(Long agentId) {
         return savedSearchRepository.findByCustomerAgentId(agentId).stream()
-                .map(this::convertToResponse)
+                .map(savedSearchMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public Optional<SavedSearchResponse> getSavedSearchById(Long id) {
         return savedSearchRepository.findByIdWithCustomer(id)
-                .map(this::convertToResponse);
+                .map(savedSearchMapper::toResponse);
     }
 
     public SavedSearchResponse createSavedSearch(Long customerId, SavedSearchRequest request) {
@@ -130,7 +134,7 @@ public class SavedSearchService {
         logger.info("Created saved search '{}' (id={}) for customer '{}' (id={}) with {} filters",
                 saved.getName(), saved.getId(), customer.getFullName(), customerId, request.getFilters().size());
 
-        return convertToResponse(savedSearchRepository.findByIdWithCustomer(saved.getId())
+        return savedSearchMapper.toResponse(savedSearchRepository.findByIdWithCustomer(saved.getId())
                 .orElseThrow(() -> new EntityNotFoundException("Saved search not found after creation")));
     }
 
@@ -166,7 +170,7 @@ public class SavedSearchService {
                 oldName, updated.getName(), id,
                 updated.getCustomer().getFullName(), updated.getCustomer().getId());
 
-        return convertToResponse(updated);
+        return savedSearchMapper.toResponse(updated);
     }
 
     public void deleteSavedSearch(Long id, Long agentId) {
@@ -551,28 +555,6 @@ public class SavedSearchService {
             : Sort.Direction.DESC;
 
         return PageRequest.of(request.getPage(), request.getSize(), Sort.by(direction, sortField));
-    }
-
-    private SavedSearchResponse convertToResponse(SavedSearch savedSearch) {
-        List<SearchFilterDTO> filters;
-        try {
-            filters = objectMapper.readValue(savedSearch.getFiltersJson(), SEARCH_FILTER_LIST_TYPE);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("Failed to deserialize filters from JSON", e);
-        }
-
-        return new SavedSearchResponse(
-                savedSearch.getId(),
-                savedSearch.getCustomer().getId(),
-                savedSearch.getCustomer().getFullName(),
-                savedSearch.getCustomer().getAgent().getId(),
-                savedSearch.getCustomer().getAgent().getFullName(),
-                savedSearch.getName(),
-                savedSearch.getDescription(),
-                filters,
-                savedSearch.getCreatedDate(),
-                savedSearch.getUpdatedDate()
-        );
     }
 
     @Transactional(readOnly = true)
