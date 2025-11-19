@@ -1,11 +1,20 @@
 package com.realestatecrm.dto.savedsearch;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.realestatecrm.enums.PropertyDataType;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Search filter DTO for property searches.
+ * JSON Schema Version: 1.0
+ *
+ * @JsonIgnoreProperties ensures backward compatibility when new fields are added
+ * in future schema versions.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchFilterDTO {
     @NotNull
     private Long attributeId;

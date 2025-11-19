@@ -19,6 +19,9 @@ public interface AttributeValueRepository extends JpaRepository<AttributeValue, 
 
     Optional<AttributeValue> findByPropertyIdAndAttributeId(Long propertyId, Long attributeId);
 
+    // Batch fetch method to avoid N+1 queries
+    List<AttributeValue> findByPropertyIdInAndAttributeIdIn(List<Long> propertyIds, List<Long> attributeIds);
+
     void deleteByPropertyIdAndAttributeId(Long propertyId, Long attributeId);
 
     List<AttributeValue> findByAttributeIdAndTextValue(Long attributeId, String textValue);
