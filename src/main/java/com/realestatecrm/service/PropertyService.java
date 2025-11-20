@@ -83,8 +83,7 @@ public class PropertyService {
 
     public Property createProperty(Property property) {
         validateProperty(property);
-        Property savedProperty = propertyRepository.save(property);
-        return savedProperty;
+        return propertyRepository.save(property);
     }
 
     public Property updateProperty(Long id, Property updatedProperty) {

@@ -142,7 +142,7 @@ public class PropertyAttributeService {
     }
 
     public void deleteAttributeOption(Long optionId) {
-        PropertyAttributeOption option = propertyAttributeOptionRepository.findById(optionId)
+        propertyAttributeOptionRepository.findById(optionId)
                 .orElseThrow(() -> new EntityNotFoundException("Attribute option not found with id: " + optionId));
 
         // In a production system, you might want to check if this option is used in property values
