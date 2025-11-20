@@ -89,7 +89,8 @@ public class CustomerService {
     }
 
     public Customer updateCustomer(Long id, Customer updatedCustomer) {
-        Customer existingCustomer = customerRepository.findById(id)
+        // LAZY FIX: Use findByIdWithAgent to eagerly fetch agent relationship
+        Customer existingCustomer = customerRepository.findByIdWithAgent(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + id));
 
         validateCustomerUpdate(existingCustomer, updatedCustomer);
@@ -115,7 +116,8 @@ public class CustomerService {
     }
 
     public Customer updateCustomerStatus(Long id, CustomerStatus status) {
-        Customer customer = customerRepository.findById(id)
+        // LAZY FIX: Use findByIdWithAgent to eagerly fetch agent relationship
+        Customer customer = customerRepository.findByIdWithAgent(id)
                 .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + id));
         customer.setStatus(status);
         return customerRepository.save(customer);
