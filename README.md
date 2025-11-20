@@ -35,11 +35,13 @@ See [SECURITY.md](SECURITY.md) for detailed security documentation.
 ## Documentation
 
 ### For Frontend Developers:
-- [Property CRUD and Attributes — API Usage Guide](docs/property-crud.md)
-- [Property Attributes — Frontend Integration Guide](docs/property-attributes.md)
+- [Frontend Integration Guide](docs/Frontend-Integration-Guide.md) - **START HERE** - Complete API guide with TypeScript types
+- [API Testing Guide](docs/API-Testing-Guide.md) - Quick and easy endpoint testing
 
-### For Developers:
+### For Backend Developers:
 - [Security Documentation](SECURITY.md) - **READ THIS FIRST**
+- [Lazy Initialization Prevention](docs/Lazy-Initialization-Prevention.md) - Critical JPA guide
+- [AI Assistant Guide](CLAUDE.md) - Comprehensive development guide
 
 ## Development
 

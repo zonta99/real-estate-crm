@@ -1,6 +1,6 @@
 # Real Estate CRM Documentation
 
-> **Last Updated**: 2025-11-19
+> **Last Updated**: 2025-11-20
 > **Version**: 1.0
 
 Welcome to the Real Estate CRM documentation. This directory contains comprehensive guides for developers, frontend integrators, and system administrators.
@@ -11,7 +11,7 @@ Welcome to the Real Estate CRM documentation. This directory contains comprehens
 
 ### For Frontend Developers
 
-#### **[Frontend Integration Guide](FRONTEND-INTEGRATION-GUIDE.md)** ⭐ **START HERE**
+#### **[Frontend Integration Guide](Frontend-Integration-Guide.md)** ⭐ **START HERE**
 **Complete guide for integrating with the Real Estate CRM API**
 
 - ✅ **60+ API endpoints** with detailed request/response formats
@@ -31,14 +31,20 @@ Welcome to the Real Estate CRM documentation. This directory contains comprehens
 - Property Attributes (dynamic attribute system)
 - Saved Searches (create and execute searches)
 
+#### **[API Testing Guide](API-Testing-Guide.md)** 🧪 **PRACTICAL**
+**Quick and easy way to test all API endpoints with mock data**
+
+- ✅ **100+ test requests** covering all endpoints
+- ✅ **Pre-configured test users** with different roles
+- ✅ **VS Code REST Client** integration
+- ✅ **Common test scenarios** and workflows
+- ✅ **Troubleshooting tips** and debugging
+
 ---
 
 ### For Backend Developers
 
-#### **[API Documentation](API-Documentation.md)**
-Technical API reference with endpoint specifications, request/response schemas, and business rules.
-
-#### **[LazyInitializationException Prevention](LazyInitializationException-Prevention.md)** ⚠️ **IMPORTANT**
+#### **[Lazy Initialization Prevention](Lazy-Initialization-Prevention.md)** ⚠️ **CRITICAL**
 Essential guide to prevent the most common bug in this codebase. Required reading before making any changes to entities or repositories.
 
 **Key Topics:**
@@ -46,19 +52,7 @@ Essential guide to prevent the most common bug in this codebase. Required readin
 - Using `@EntityGraph` correctly
 - Transaction boundary management
 - DTO conversion patterns
-
-#### **[Property CRUD Operations](property-crud.md)**
-Detailed guide for property management operations including creation, updates, deletion, and querying.
-
-#### **[Property Attributes System](property-attributes.md)**
-Deep dive into the dynamic attribute system that allows extensible property metadata.
-
-**Key Topics:**
-- Attribute definitions and types
-- Dynamic attribute values
-- Single-select and multi-select options
-- Validation rules
-- Category organization
+- Common pitfalls and solutions
 
 ---
 
@@ -276,7 +270,7 @@ java -jar target/real-estate-crm-0.0.1-SNAPSHOT.jar
 Optional<Property> findByIdWithAgent(Long id);
 ```
 
-See: [LazyInitializationException-Prevention.md](LazyInitializationException-Prevention.md)
+See: [Lazy-Initialization-Prevention.md](Lazy-Initialization-Prevention.md)
 
 #### 2. 401 Unauthorized
 **Causes**:
@@ -303,13 +297,13 @@ See: [LazyInitializationException-Prevention.md](LazyInitializationException-Pre
 ## 📞 Support
 
 ### For Frontend Integration Questions
-1. Check [FRONTEND-INTEGRATION-GUIDE.md](FRONTEND-INTEGRATION-GUIDE.md)
+1. Check [Frontend-Integration-Guide.md](Frontend-Integration-Guide.md)
 2. Test endpoints in Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 3. Review error response for detailed validation messages
 
 ### For Backend Development Questions
 1. Read [CLAUDE.md](../CLAUDE.md) for comprehensive patterns
-2. Check [LazyInitializationException-Prevention.md](LazyInitializationException-Prevention.md) for JPA issues
+2. Check [Lazy-Initialization-Prevention.md](Lazy-Initialization-Prevention.md) for JPA issues
 3. Review existing similar code in `/controller`, `/service`, or `/repository`
 
 ---

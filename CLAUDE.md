@@ -244,10 +244,10 @@ Response (DTO/JSON)
 │   └── ... (Integration tests)
 │
 ├── docs/                            # Documentation
-│   ├── API-Documentation.md
-│   ├── property-crud.md
-│   ├── property-attributes.md
-│   └── LazyInitializationException-Prevention.md  # IMPORTANT!
+│   ├── README.md
+│   ├── Frontend-Integration-Guide.md
+│   ├── API-Testing-Guide.md
+│   └── Lazy-Initialization-Prevention.md  # IMPORTANT!
 │
 ├── README.md                        # Quick start guide
 ├── SECURITY.md                      # Security documentation
@@ -1003,7 +1003,7 @@ public PropertyResponse get(Long id) {
 }
 ```
 
-**Read Full Guide:** `/docs/LazyInitializationException-Prevention.md`
+**Read Full Guide:** `/docs/Lazy-Initialization-Prevention.md`
 
 ### 2. Returning Entities from Controllers
 
@@ -1242,7 +1242,7 @@ export SPRING_PROFILES_ACTIVE=dev
 
 1. `README.md` - Quick start guide
 2. `SECURITY.md` - Security requirements and best practices
-3. `docs/LazyInitializationException-Prevention.md` - Avoid #1 bug
+3. `docs/Lazy-Initialization-Prevention.md` - Avoid #1 bug
 4. `src/main/resources/application.yml` - Configuration
 5. `src/main/java/com/realestatecrm/entity/Property.java` - Example entity
 6. `src/main/java/com/realestatecrm/controller/PropertyController.java` - Example controller
@@ -1315,8 +1315,8 @@ This Real Estate CRM follows well-established Spring Boot patterns and conventio
 **Questions?** Refer to:
 - This document (CLAUDE.md)
 - Security documentation (SECURITY.md)
-- API documentation (docs/API-Documentation.md)
-- Lazy loading guide (docs/LazyInitializationException-Prevention.md)
+- Frontend integration guide (docs/Frontend-Integration-Guide.md)
+- Lazy loading guide (docs/Lazy-Initialization-Prevention.md)
 
 ---
 
