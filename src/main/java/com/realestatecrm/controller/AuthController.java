@@ -109,8 +109,9 @@ public class AuthController {
 
         // Generate new access token
         User user = refreshToken.getUser();
+        CustomUserDetailsService.UserPrincipal userPrincipal = CustomUserDetailsService.UserPrincipal.create(user);
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getUsername(), null, List.of(() -> "ROLE_" + user.getRole().name()));
+                userPrincipal, null, userPrincipal.getAuthorities());
 
         String newAccessToken = jwtUtils.generateJwtToken(authentication);
 

@@ -4,6 +4,8 @@ import com.realestatecrm.dto.common.MessageResponse;
 import com.realestatecrm.dto.user.request.CreateUserRequest;
 import com.realestatecrm.dto.user.request.HierarchyRequest;
 import com.realestatecrm.dto.user.request.UpdateUserRequest;
+import com.realestatecrm.dto.user.request.UpdateUserPasswordRequest;
+import com.realestatecrm.dto.user.request.UpdateUserStatusRequest;
 import com.realestatecrm.dto.user.response.UserResponse;
 import com.realestatecrm.entity.User;
 import com.realestatecrm.enums.Role;
@@ -113,6 +115,24 @@ public class UserController {
         return ResponseEntity.ok(new MessageResponse("User deleted successfully"));
     }
 
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> updateUserStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserStatusRequest request) {
+        User user = userService.updateUserStatus(id, request.status());
+        return ResponseEntity.ok(userMapper.toResponse(user));
+    }
+
+    @PutMapping("/{id}/password")
+    @PreAuthorize("hasRole('ADMIN') or @userService.getUserByUsername(authentication.name).get().id == #id")
+    public ResponseEntity<MessageResponse> updateUserPassword(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateUserPasswordRequest request) {
+        userService.updateUserPassword(id, request.newPassword());
+        return ResponseEntity.ok(new MessageResponse("Password updated successfully"));
+    }
+
     @PostMapping("/{id}/hierarchy")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER')")
     public ResponseEntity<MessageResponse> addSupervisorRelationship(
@@ -138,6 +158,17 @@ public class UserController {
     public ResponseEntity<List<UserResponse>> getSubordinates(@PathVariable Long id) {
         List<User> subordinates = userService.getDirectSubordinates(id);
         List<UserResponse> responses = subordinates.stream()
+                .map(userMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/{id}/supervisors")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER') or @userService.getUserByUsername(authentication.name).get().id == #id")
+    public ResponseEntity<List<UserResponse>> getSupervisors(@PathVariable Long id) {
+        List<User> supervisors = userService.getDirectSupervisors(id);
+        List<UserResponse> responses = supervisors.stream()
                 .map(userMapper::toResponse)
                 .collect(Collectors.toList());
 

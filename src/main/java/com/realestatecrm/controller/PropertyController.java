@@ -15,6 +15,7 @@ import com.realestatecrm.mapper.PropertyMapper;
 import com.realestatecrm.service.PropertyService;
 import com.realestatecrm.service.SavedSearchService;
 import com.realestatecrm.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -59,7 +60,7 @@ public class PropertyController {
             Pageable pageable) {
 
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Current user not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
 
         Page<Property> properties;
         if (currentUser.getRole().name().equals("ADMIN")) {
@@ -80,7 +81,7 @@ public class PropertyController {
     @Transactional(readOnly = true)
     public ResponseEntity<PropertyResponse> getPropertyById(@PathVariable Long id) {
         Property property = propertyService.getPropertyById(id)
-                .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + id));
 
         // Return basic property info without attributes for better performance
         return ResponseEntity.ok(propertyMapper.toResponse(property));
@@ -91,7 +92,7 @@ public class PropertyController {
     @Transactional(readOnly = true)
     public ResponseEntity<PropertyResponse> getPropertyByIdWithAttributes(@PathVariable Long id) {
         Property property = propertyService.getPropertyById(id)
-                .orElseThrow(() -> new RuntimeException("Property not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + id));
 
         // Return complete property info including all dynamic attributes
         List<AttributeValue> values = propertyService.getAttributeValues(property.getId());
@@ -105,7 +106,7 @@ public class PropertyController {
             @Valid @RequestBody CreatePropertyRequest request) {
 
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Current user not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
 
         Property property = propertyMapper.toEntity(request);
         property.setAgent(currentUser);
@@ -131,6 +132,15 @@ public class PropertyController {
     public ResponseEntity<MessageResponse> deleteProperty(@PathVariable Long id) {
         propertyService.deleteProperty(id);
         return ResponseEntity.ok(new MessageResponse("Property deleted successfully"));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<PropertyResponse> updatePropertyStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdatePropertyStatusRequest request) {
+        Property property = propertyService.updatePropertyStatus(id, request.status());
+        return ResponseEntity.ok(propertyMapper.toResponse(property));
     }
 
     @PostMapping("/{id}/values")
@@ -179,7 +189,7 @@ public class PropertyController {
             @Valid @RequestBody SharePropertyRequest request) {
 
         User currentUser = userService.getUserByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Current user not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Current user not found"));
 
         propertyService.shareProperty(id, request.getSharedWithUserId(), currentUser.getId());
         return ResponseEntity.ok(new MessageResponse("Property shared successfully"));

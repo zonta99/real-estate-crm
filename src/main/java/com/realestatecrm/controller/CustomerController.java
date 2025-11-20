@@ -5,6 +5,7 @@ import com.realestatecrm.dto.customer.request.CreateCustomerRequest;
 import com.realestatecrm.dto.customer.request.CreateCustomerInteractionRequest;
 import com.realestatecrm.dto.customer.request.CreateCustomerNoteRequest;
 import com.realestatecrm.dto.customer.request.UpdateCustomerRequest;
+import com.realestatecrm.dto.customer.request.UpdateCustomerStatusRequest;
 import com.realestatecrm.dto.customer.response.CustomerInteractionResponse;
 import com.realestatecrm.dto.customer.response.CustomerNoteResponse;
 import com.realestatecrm.dto.customer.response.CustomerResponse;
@@ -114,6 +115,15 @@ public class CustomerController {
     public ResponseEntity<MessageResponse> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.ok(new MessageResponse("Customer deleted successfully"));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
+    public ResponseEntity<CustomerResponse> updateCustomerStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateCustomerStatusRequest request) {
+        Customer customer = customerService.updateCustomerStatus(id, request.status());
+        return ResponseEntity.ok(customerMapper.toResponse(customer));
     }
 
     @GetMapping("/search")
