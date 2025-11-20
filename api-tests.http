@@ -1,18 +1,5 @@
 ###############################################################################
 # Real Estate CRM - API Testing Suite
-#
-# This file contains HTTP requests to test all API endpoints with mock data.
-#
-# Setup:
-#   1. Start the application: ./mvnw spring-boot:run
-#   2. Install VS Code "REST Client" extension OR use IntelliJ IDEA HTTP Client
-#   3. Update the @baseUrl if your server runs on a different port
-#   4. Login first to get tokens, then run other requests
-#
-# Usage:
-#   - Click "Send Request" above any request (VS Code)
-#   - Click the green arrow beside each request (IntelliJ)
-#   - Use variables like {{token}} that auto-populate from responses
 ###############################################################################
 
 @baseUrl = http://localhost:8080
@@ -23,17 +10,20 @@
 ###############################################################################
 
 ### Login as Admin
-# @name adminLogin
 POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
   "username": "admin",
-  "password": "{{$dotenv ADMIN_PASSWORD}}"
+  "password": "YourSecurePassword123!"
 }
 
+> {%
+    client.global.set("adminToken", response.body.token);
+    client.global.set("adminRefreshToken", response.body.refreshToken);
+%}
+
 ### Login as Agent (Alice)
-# @name agentLogin
 POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
@@ -42,8 +32,12 @@ Content-Type: {{contentType}}
   "password": "password"
 }
 
+> {%
+    client.global.set("agentToken", response.body.token);
+    client.global.set("agentRefreshToken", response.body.refreshToken);
+%}
+
 ### Login as Broker (Bob)
-# @name brokerLogin
 POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
@@ -52,8 +46,12 @@ Content-Type: {{contentType}}
   "password": "password"
 }
 
+> {%
+    client.global.set("brokerToken", response.body.token);
+    client.global.set("brokerRefreshToken", response.body.refreshToken);
+%}
+
 ### Login as Agent (Carol)
-# @name carolLogin
 POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
@@ -62,8 +60,11 @@ Content-Type: {{contentType}}
   "password": "password"
 }
 
+> {%
+    client.global.set("carolToken", response.body.token);
+%}
+
 ### Login as Agent (David)
-# @name davidLogin
 POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
@@ -72,8 +73,11 @@ Content-Type: {{contentType}}
   "password": "password"
 }
 
+> {%
+    client.global.set("davidToken", response.body.token);
+%}
+
 ### Login as Assistant (Emma)
-# @name assistantLogin
 POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
@@ -82,25 +86,29 @@ Content-Type: {{contentType}}
   "password": "password"
 }
 
+> {%
+    client.global.set("assistantToken", response.body.token);
+%}
+
 ### Get Current User Info (requires authentication)
 GET {{baseUrl}}/api/auth/user
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Get User Permissions
 GET {{baseUrl}}/api/auth/permissions
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Refresh Token
 POST {{baseUrl}}/api/auth/refresh
 Content-Type: {{contentType}}
 
 {
-  "refreshToken": "{{agentLogin.response.body.refreshToken}}"
+  "refreshToken": "{{agentRefreshToken}}"
 }
 
 ### Logout
 POST {{baseUrl}}/api/auth/logout
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ###############################################################################
 # PROPERTY ENDPOINTS
@@ -108,32 +116,32 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Get All Properties (Agent)
 GET {{baseUrl}}/api/properties
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Get All Properties with Pagination
 GET {{baseUrl}}/api/properties?page=0&size=5&sort=price,desc
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Get Property by ID (with attributes)
 GET {{baseUrl}}/api/properties/1
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Properties by Price Range
 GET {{baseUrl}}/api/properties/search?minPrice=300000&maxPrice=500000
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Properties by Status
 GET {{baseUrl}}/api/properties/search?status=ACTIVE
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Properties with All Filters
 GET {{baseUrl}}/api/properties/search?minPrice=200000&maxPrice=1000000&status=ACTIVE&page=0&size=10
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Create New Property (Agent)
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "title": "Beautiful Garden Home",
@@ -145,7 +153,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ### Update Property
 PUT {{baseUrl}}/api/properties/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "title": "Cozy Family Home - Updated!",
@@ -156,12 +164,12 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Update Property Status
 PATCH {{baseUrl}}/api/properties/1/status?status=SOLD
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Set Property Attribute Values
 POST {{baseUrl}}/api/properties/1/attribute-values
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "attributeId": 1,
@@ -170,12 +178,12 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Get Property Attribute Values
 GET {{baseUrl}}/api/properties/1/attribute-values
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Share Property with Another User
 POST {{baseUrl}}/api/properties/1/share
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "sharedWithUserId": 3
@@ -183,20 +191,20 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Get Property Shares
 GET {{baseUrl}}/api/properties/1/shares
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Unshare Property
 DELETE {{baseUrl}}/api/properties/1/share/3
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Delete Property (requires owner or admin)
 DELETE {{baseUrl}}/api/properties/1
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Properties by Saved Search Criteria
 POST {{baseUrl}}/api/properties/search/by-criteria
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "minPrice": 300000,
@@ -227,36 +235,36 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Get All Customers
 GET {{baseUrl}}/api/customers
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Get All Customers with Pagination
 GET {{baseUrl}}/api/customers?page=0&size=5
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Get Customer by ID
 GET {{baseUrl}}/api/customers/1
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Customers by Name
 GET {{baseUrl}}/api/customers/search?name=John
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Customers by Email
 GET {{baseUrl}}/api/customers/search?email=john.smith@example.com
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Customers by Status
 GET {{baseUrl}}/api/customers/search?status=LEAD
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Search Customers by Budget Range
 GET {{baseUrl}}/api/customers/search?minBudget=200000&maxBudget=500000
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Create New Customer
 POST {{baseUrl}}/api/customers
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "firstName": "Jessica",
@@ -273,7 +281,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ### Update Customer
 PUT {{baseUrl}}/api/customers/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "firstName": "John",
@@ -289,24 +297,20 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Update Customer Status
 PATCH {{baseUrl}}/api/customers/1/status?status=NEGOTIATING
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Delete Customer
 DELETE {{baseUrl}}/api/customers/1
-Authorization: Bearer {{agentLogin.response.body.token}}
-
-###############################################################################
-# CUSTOMER INTERACTIONS ENDPOINTS
-###############################################################################
+Authorization: Bearer {{agentToken}}
 
 ### Get Customer Interactions
 GET {{baseUrl}}/api/customers/1/interactions
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
-### Add Customer Interaction
+### Create Customer Interaction
 POST {{baseUrl}}/api/customers/1/interactions
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "interactionType": "CALL",
@@ -317,7 +321,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ### Update Customer Interaction
 PUT {{baseUrl}}/api/customers/1/interactions/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "interactionType": "MEETING",
@@ -327,20 +331,16 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Delete Customer Interaction
 DELETE {{baseUrl}}/api/customers/1/interactions/1
-Authorization: Bearer {{agentLogin.response.body.token}}
-
-###############################################################################
-# CUSTOMER NOTES ENDPOINTS
-###############################################################################
+Authorization: Bearer {{agentToken}}
 
 ### Get Customer Notes
 GET {{baseUrl}}/api/customers/1/notes
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
-### Add Customer Note
+### Create Customer Note
 POST {{baseUrl}}/api/customers/1/notes
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "content": "Customer mentioned they need to move by end of Q1 2026 due to job relocation."
@@ -349,7 +349,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ### Update Customer Note
 PUT {{baseUrl}}/api/customers/1/notes/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "content": "URGENT: Customer needs to move by March 2026 due to job relocation. Looking for quick close."
@@ -357,24 +357,20 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Delete Customer Note
 DELETE {{baseUrl}}/api/customers/1/notes/1
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
-###############################################################################
-# SAVED SEARCH ENDPOINTS
-###############################################################################
-
-### Get All Saved Searches for Customer
+### Get Customer Saved Searches
 GET {{baseUrl}}/api/customers/1/saved-searches
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Get Saved Search by ID
 GET {{baseUrl}}/api/saved-searches/1
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
-### Create Saved Search
+### Create Saved Search for Customer
 POST {{baseUrl}}/api/customers/1/saved-searches
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "name": "Dream Family Home",
@@ -401,7 +397,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ### Update Saved Search
 PUT {{baseUrl}}/api/saved-searches/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "name": "Family Homes 3-5BR - Updated",
@@ -431,42 +427,42 @@ Authorization: Bearer {{agentLogin.response.body.token}}
   ]
 }
 
-### Execute Saved Search (find matching properties)
+### Execute Saved Search
 GET {{baseUrl}}/api/saved-searches/1/execute
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Execute Saved Search with Pagination
 GET {{baseUrl}}/api/saved-searches/1/execute?page=0&size=5
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Delete Saved Search
 DELETE {{baseUrl}}/api/saved-searches/1
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ###############################################################################
-# PROPERTY ATTRIBUTE ENDPOINTS (Admin Only)
+# PROPERTY ATTRIBUTES (Admin Only)
 ###############################################################################
 
 ### Get All Property Attributes
 GET {{baseUrl}}/api/property-attributes
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Get Property Attributes by Category
 GET {{baseUrl}}/api/property-attributes/by-category?category=FEATURES
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Get Property Attribute by ID
 GET {{baseUrl}}/api/property-attributes/1
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
-### Search Property Attributes
+### Search Property Attributes by Name
 GET {{baseUrl}}/api/property-attributes/search?name=bedroom
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Create Property Attribute (Text)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Pet Policy",
@@ -480,7 +476,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Create Property Attribute (Number)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Number of Floors",
@@ -494,7 +490,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Create Property Attribute (Boolean)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Pet Friendly",
@@ -508,7 +504,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Create Property Attribute (Single Select with Options)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Parking Type",
@@ -528,7 +524,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Create Property Attribute (Multi Select with Options)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Eco Features",
@@ -549,7 +545,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Update Property Attribute
 PUT {{baseUrl}}/api/property-attributes/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "name": "Street Address",
@@ -563,7 +559,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Reorder Property Attributes
 POST {{baseUrl}}/api/property-attributes/reorder
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 [
   {"attributeId": 1, "newDisplayOrder": 1},
@@ -573,7 +569,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 
 ### Delete Property Attribute
 DELETE {{baseUrl}}/api/property-attributes/100
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ###############################################################################
 # USER MANAGEMENT ENDPOINTS (Admin Only)
@@ -581,32 +577,32 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 
 ### Get All Users
 GET {{baseUrl}}/api/users
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Get All Users with Pagination
 GET {{baseUrl}}/api/users?page=0&size=10
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Get User by ID
 GET {{baseUrl}}/api/users/1
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Search Users by Username
 GET {{baseUrl}}/api/users/search?username=alice
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Search Users by Role
 GET {{baseUrl}}/api/users/search?role=AGENT
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Search Users by Status
 GET {{baseUrl}}/api/users/search?status=ACTIVE
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Create New User (Admin creates Agent)
 POST {{baseUrl}}/api/users
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "username": "frank",
@@ -621,7 +617,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Create New User (Admin creates Broker)
 POST {{baseUrl}}/api/users
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "username": "grace",
@@ -636,7 +632,7 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 ### Update User
 PUT {{baseUrl}}/api/users/2
 Content-Type: {{contentType}}
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 {
   "username": "alice",
@@ -649,16 +645,16 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 
 ### Update User Status (Deactivate)
 PATCH {{baseUrl}}/api/users/2/status?status=INACTIVE
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Update User Status (Reactivate)
 PATCH {{baseUrl}}/api/users/2/status?status=ACTIVE
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Change User Password (Self)
 PATCH {{baseUrl}}/api/users/2/password
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "currentPassword": "password",
@@ -667,7 +663,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 
 ### Delete User
 DELETE {{baseUrl}}/api/users/10
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ###############################################################################
 # USER HIERARCHY ENDPOINTS
@@ -675,19 +671,19 @@ Authorization: Bearer {{adminLogin.response.body.token}}
 
 ### Get User Subordinates
 GET {{baseUrl}}/api/users/3/subordinates
-Authorization: Bearer {{brokerLogin.response.body.token}}
+Authorization: Bearer {{brokerToken}}
 
 ### Get User Supervisors
 GET {{baseUrl}}/api/users/2/supervisors
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Add Supervisor (Broker supervises Agent)
 POST {{baseUrl}}/api/users/2/supervisors/3
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ### Remove Supervisor
 DELETE {{baseUrl}}/api/users/2/supervisors/3
-Authorization: Bearer {{adminLogin.response.body.token}}
+Authorization: Bearer {{adminToken}}
 
 ###############################################################################
 # HEALTH CHECK & MONITORING
@@ -705,12 +701,12 @@ GET {{baseUrl}}/actuator/info
 
 ### Test 404 - Property Not Found
 GET {{baseUrl}}/api/properties/99999
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 ### Test 400 - Invalid Request (Missing Required Field)
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "description": "Missing title and price"
@@ -722,7 +718,7 @@ GET {{baseUrl}}/api/properties
 ### Test 403 - Forbidden (Assistant tries to create property)
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
-Authorization: Bearer {{assistantLogin.response.body.token}}
+Authorization: Bearer {{assistantToken}}
 
 {
   "title": "Test Property",
@@ -733,7 +729,7 @@ Authorization: Bearer {{assistantLogin.response.body.token}}
 ### Test 403 - Forbidden (Agent tries to access admin endpoint)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "name": "Test Attribute",
@@ -748,7 +744,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ### Quick Setup: Create 3 Properties
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "title": "Riverside Cottage",
@@ -760,7 +756,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ###
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "title": "Downtown Penthouse",
@@ -772,7 +768,7 @@ Authorization: Bearer {{agentLogin.response.body.token}}
 ###
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
-Authorization: Bearer {{agentLogin.response.body.token}}
+Authorization: Bearer {{agentToken}}
 
 {
   "title": "Suburban Ranch",
