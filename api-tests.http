@@ -1,0 +1,782 @@
+###############################################################################
+# Real Estate CRM - API Testing Suite
+###############################################################################
+
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+###############################################################################
+# AUTHENTICATION ENDPOINTS
+###############################################################################
+
+### Login as Admin
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "admin",
+  "password": "YourSecurePassword123!"
+}
+
+> {%
+    client.global.set("adminToken", response.body.token);
+    client.global.set("adminRefreshToken", response.body.refreshToken);
+%}
+
+### Login as Agent (Alice)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "alice",
+  "password": "password"
+}
+
+> {%
+    client.global.set("agentToken", response.body.token);
+    client.global.set("agentRefreshToken", response.body.refreshToken);
+%}
+
+### Login as Broker (Bob)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "bob",
+  "password": "password"
+}
+
+> {%
+    client.global.set("brokerToken", response.body.token);
+    client.global.set("brokerRefreshToken", response.body.refreshToken);
+%}
+
+### Login as Agent (Carol)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "carol",
+  "password": "password"
+}
+
+> {%
+    client.global.set("carolToken", response.body.token);
+%}
+
+### Login as Agent (David)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "david",
+  "password": "password"
+}
+
+> {%
+    client.global.set("davidToken", response.body.token);
+%}
+
+### Login as Assistant (Emma)
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "username": "emma",
+  "password": "password"
+}
+
+> {%
+    client.global.set("assistantToken", response.body.token);
+%}
+
+### Get Current User Info (requires authentication)
+GET {{baseUrl}}/api/auth/user
+Authorization: Bearer {{agentToken}}
+
+### Get User Permissions
+GET {{baseUrl}}/api/auth/permissions
+Authorization: Bearer {{agentToken}}
+
+### Refresh Token
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{agentRefreshToken}}"
+}
+
+### Logout
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{agentToken}}
+
+###############################################################################
+# PROPERTY ENDPOINTS
+###############################################################################
+
+### Get All Properties (Agent)
+GET {{baseUrl}}/api/properties
+Authorization: Bearer {{agentToken}}
+
+### Get All Properties with Pagination
+GET {{baseUrl}}/api/properties?page=0&size=5&sort=price,desc
+Authorization: Bearer {{agentToken}}
+
+### Get Property by ID (with attributes)
+GET {{baseUrl}}/api/properties/1
+Authorization: Bearer {{agentToken}}
+
+### Search Properties by Price Range
+GET {{baseUrl}}/api/properties/search?minPrice=300000&maxPrice=500000
+Authorization: Bearer {{agentToken}}
+
+### Search Properties by Status
+GET {{baseUrl}}/api/properties/search?status=ACTIVE
+Authorization: Bearer {{agentToken}}
+
+### Search Properties with All Filters
+GET {{baseUrl}}/api/properties/search?minPrice=200000&maxPrice=1000000&status=ACTIVE&page=0&size=10
+Authorization: Bearer {{agentToken}}
+
+### Create New Property (Agent)
+POST {{baseUrl}}/api/properties
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "title": "Beautiful Garden Home",
+  "description": "Stunning 3-bedroom home with expansive garden and modern finishes. Perfect for nature lovers!",
+  "price": 425000,
+  "status": "ACTIVE"
+}
+
+### Update Property
+PUT {{baseUrl}}/api/properties/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "title": "Cozy Family Home - Updated!",
+  "description": "3-bed, 2-bath cozy home near parks and schools. Recently updated kitchen!",
+  "price": 365000,
+  "status": "ACTIVE"
+}
+
+### Update Property Status
+PATCH {{baseUrl}}/api/properties/1/status?status=SOLD
+Authorization: Bearer {{agentToken}}
+
+### Set Property Attribute Values
+POST {{baseUrl}}/api/properties/1/attribute-values
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "attributeId": 1,
+  "value": "123 Main Street, Springfield, IL"
+}
+
+### Get Property Attribute Values
+GET {{baseUrl}}/api/properties/1/attribute-values
+Authorization: Bearer {{agentToken}}
+
+### Share Property with Another User
+POST {{baseUrl}}/api/properties/1/share
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "sharedWithUserId": 3
+}
+
+### Get Property Shares
+GET {{baseUrl}}/api/properties/1/shares
+Authorization: Bearer {{agentToken}}
+
+### Unshare Property
+DELETE {{baseUrl}}/api/properties/1/share/3
+Authorization: Bearer {{agentToken}}
+
+### Delete Property (requires owner or admin)
+DELETE {{baseUrl}}/api/properties/1
+Authorization: Bearer {{agentToken}}
+
+### Search Properties by Saved Search Criteria
+POST {{baseUrl}}/api/properties/search/by-criteria
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "minPrice": 300000,
+  "maxPrice": 600000,
+  "filters": [
+    {
+      "attributeId": 8,
+      "dataType": "NUMBER",
+      "minValue": 3,
+      "maxValue": 5
+    },
+    {
+      "attributeId": 9,
+      "dataType": "NUMBER",
+      "minValue": 2
+    },
+    {
+      "attributeId": 2,
+      "dataType": "SINGLE_SELECT",
+      "selectedValues": ["Single Family Home", "Townhouse"]
+    }
+  ]
+}
+
+###############################################################################
+# CUSTOMER ENDPOINTS
+###############################################################################
+
+### Get All Customers
+GET {{baseUrl}}/api/customers
+Authorization: Bearer {{agentToken}}
+
+### Get All Customers with Pagination
+GET {{baseUrl}}/api/customers?page=0&size=5
+Authorization: Bearer {{agentToken}}
+
+### Get Customer by ID
+GET {{baseUrl}}/api/customers/1
+Authorization: Bearer {{agentToken}}
+
+### Search Customers by Name
+GET {{baseUrl}}/api/customers/search?name=John
+Authorization: Bearer {{agentToken}}
+
+### Search Customers by Email
+GET {{baseUrl}}/api/customers/search?email=john.smith@example.com
+Authorization: Bearer {{agentToken}}
+
+### Search Customers by Status
+GET {{baseUrl}}/api/customers/search?status=LEAD
+Authorization: Bearer {{agentToken}}
+
+### Search Customers by Budget Range
+GET {{baseUrl}}/api/customers/search?minBudget=200000&maxBudget=500000
+Authorization: Bearer {{agentToken}}
+
+### Create New Customer
+POST {{baseUrl}}/api/customers
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "firstName": "Jessica",
+  "lastName": "Brown",
+  "email": "jessica.brown@example.com",
+  "phone": "555-0199",
+  "budgetMin": 400000,
+  "budgetMax": 650000,
+  "notes": "Looking for modern home with home office. Works remotely.",
+  "leadSource": "Website Inquiry",
+  "status": "LEAD"
+}
+
+### Update Customer
+PUT {{baseUrl}}/api/customers/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "email": "john.smith@example.com",
+  "phone": "555-0101",
+  "budgetMin": 320000,
+  "budgetMax": 480000,
+  "notes": "Looking for family home with 3+ bedrooms. Needs good school district. Pre-approved for mortgage.",
+  "leadSource": "Website Inquiry",
+  "status": "QUALIFIED"
+}
+
+### Update Customer Status
+PATCH {{baseUrl}}/api/customers/1/status?status=NEGOTIATING
+Authorization: Bearer {{agentToken}}
+
+### Delete Customer
+DELETE {{baseUrl}}/api/customers/1
+Authorization: Bearer {{agentToken}}
+
+### Get Customer Interactions
+GET {{baseUrl}}/api/customers/1/interactions
+Authorization: Bearer {{agentToken}}
+
+### Create Customer Interaction
+POST {{baseUrl}}/api/customers/1/interactions
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "interactionType": "CALL",
+  "notes": "Discussed budget and preferences. Customer interested in homes with pools.",
+  "interactionDate": "2025-11-19T10:30:00"
+}
+
+### Update Customer Interaction
+PUT {{baseUrl}}/api/customers/1/interactions/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "interactionType": "MEETING",
+  "notes": "Met at office. Discussed budget, preferences, and financing options. Very motivated buyer.",
+  "interactionDate": "2025-11-19T14:00:00"
+}
+
+### Delete Customer Interaction
+DELETE {{baseUrl}}/api/customers/1/interactions/1
+Authorization: Bearer {{agentToken}}
+
+### Get Customer Notes
+GET {{baseUrl}}/api/customers/1/notes
+Authorization: Bearer {{agentToken}}
+
+### Create Customer Note
+POST {{baseUrl}}/api/customers/1/notes
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "content": "Customer mentioned they need to move by end of Q1 2026 due to job relocation."
+}
+
+### Update Customer Note
+PUT {{baseUrl}}/api/customers/1/notes/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "content": "URGENT: Customer needs to move by March 2026 due to job relocation. Looking for quick close."
+}
+
+### Delete Customer Note
+DELETE {{baseUrl}}/api/customers/1/notes/1
+Authorization: Bearer {{agentToken}}
+
+### Get Customer Saved Searches
+GET {{baseUrl}}/api/customers/1/saved-searches
+Authorization: Bearer {{agentToken}}
+
+### Get Saved Search by ID
+GET {{baseUrl}}/api/saved-searches/1
+Authorization: Bearer {{agentToken}}
+
+### Create Saved Search for Customer
+POST {{baseUrl}}/api/customers/1/saved-searches
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "name": "Dream Family Home",
+  "description": "4-bedroom homes with pool and garage in good school districts",
+  "filters": [
+    {
+      "attributeId": 8,
+      "dataType": "NUMBER",
+      "minValue": 4
+    },
+    {
+      "attributeId": 19,
+      "dataType": "BOOLEAN",
+      "booleanValue": true
+    },
+    {
+      "attributeId": 18,
+      "dataType": "BOOLEAN",
+      "booleanValue": true
+    }
+  ]
+}
+
+### Update Saved Search
+PUT {{baseUrl}}/api/saved-searches/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "name": "Family Homes 3-5BR - Updated",
+  "description": "Single family homes and townhouses with 3-5 bedrooms, 2+ bathrooms, and garage",
+  "filters": [
+    {
+      "attributeId": 8,
+      "dataType": "NUMBER",
+      "minValue": 3,
+      "maxValue": 5
+    },
+    {
+      "attributeId": 9,
+      "dataType": "NUMBER",
+      "minValue": 2
+    },
+    {
+      "attributeId": 2,
+      "dataType": "SINGLE_SELECT",
+      "selectedValues": ["Single Family Home", "Townhouse"]
+    },
+    {
+      "attributeId": 18,
+      "dataType": "BOOLEAN",
+      "booleanValue": true
+    }
+  ]
+}
+
+### Execute Saved Search
+GET {{baseUrl}}/api/saved-searches/1/execute
+Authorization: Bearer {{agentToken}}
+
+### Execute Saved Search with Pagination
+GET {{baseUrl}}/api/saved-searches/1/execute?page=0&size=5
+Authorization: Bearer {{agentToken}}
+
+### Delete Saved Search
+DELETE {{baseUrl}}/api/saved-searches/1
+Authorization: Bearer {{agentToken}}
+
+###############################################################################
+# PROPERTY ATTRIBUTES (Admin Only)
+###############################################################################
+
+### Get All Property Attributes
+GET {{baseUrl}}/api/property-attributes
+Authorization: Bearer {{adminToken}}
+
+### Get Property Attributes by Category
+GET {{baseUrl}}/api/property-attributes/by-category?category=FEATURES
+Authorization: Bearer {{adminToken}}
+
+### Get Property Attribute by ID
+GET {{baseUrl}}/api/property-attributes/1
+Authorization: Bearer {{adminToken}}
+
+### Search Property Attributes by Name
+GET {{baseUrl}}/api/property-attributes/search?name=bedroom
+Authorization: Bearer {{adminToken}}
+
+### Create Property Attribute (Text)
+POST {{baseUrl}}/api/property-attributes
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Pet Policy",
+  "dataType": "TEXT",
+  "category": "BASIC",
+  "isRequired": false,
+  "isSearchable": true,
+  "displayOrder": 100
+}
+
+### Create Property Attribute (Number)
+POST {{baseUrl}}/api/property-attributes
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Number of Floors",
+  "dataType": "NUMBER",
+  "category": "STRUCTURE",
+  "isRequired": false,
+  "isSearchable": true,
+  "displayOrder": 20
+}
+
+### Create Property Attribute (Boolean)
+POST {{baseUrl}}/api/property-attributes
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Pet Friendly",
+  "dataType": "BOOLEAN",
+  "category": "FEATURES",
+  "isRequired": false,
+  "isSearchable": true,
+  "displayOrder": 50
+}
+
+### Create Property Attribute (Single Select with Options)
+POST {{baseUrl}}/api/property-attributes
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Parking Type",
+  "dataType": "SINGLE_SELECT",
+  "category": "FEATURES",
+  "isRequired": false,
+  "isSearchable": true,
+  "displayOrder": 30,
+  "options": [
+    {"optionValue": "Garage", "displayOrder": 1},
+    {"optionValue": "Carport", "displayOrder": 2},
+    {"optionValue": "Street Parking", "displayOrder": 3},
+    {"optionValue": "None", "displayOrder": 4}
+  ]
+}
+
+### Create Property Attribute (Multi Select with Options)
+POST {{baseUrl}}/api/property-attributes
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Eco Features",
+  "dataType": "MULTI_SELECT",
+  "category": "FEATURES",
+  "isRequired": false,
+  "isSearchable": true,
+  "displayOrder": 40,
+  "options": [
+    {"optionValue": "Solar Panels", "displayOrder": 1},
+    {"optionValue": "Rainwater Harvesting", "displayOrder": 2},
+    {"optionValue": "Energy Star Appliances", "displayOrder": 3},
+    {"optionValue": "Smart Thermostat", "displayOrder": 4},
+    {"optionValue": "LED Lighting", "displayOrder": 5}
+  ]
+}
+
+### Update Property Attribute
+PUT {{baseUrl}}/api/property-attributes/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "name": "Street Address",
+  "dataType": "TEXT",
+  "category": "BASIC",
+  "isRequired": true,
+  "isSearchable": true,
+  "displayOrder": 1
+}
+
+### Reorder Property Attributes
+POST {{baseUrl}}/api/property-attributes/reorder
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+[
+  {"attributeId": 1, "newDisplayOrder": 1},
+  {"attributeId": 2, "newDisplayOrder": 2},
+  {"attributeId": 3, "newDisplayOrder": 3}
+]
+
+### Delete Property Attribute
+DELETE {{baseUrl}}/api/property-attributes/100
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+# USER MANAGEMENT ENDPOINTS (Admin Only)
+###############################################################################
+
+### Get All Users
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}
+
+### Get All Users with Pagination
+GET {{baseUrl}}/api/users?page=0&size=10
+Authorization: Bearer {{adminToken}}
+
+### Get User by ID
+GET {{baseUrl}}/api/users/1
+Authorization: Bearer {{adminToken}}
+
+### Search Users by Username
+GET {{baseUrl}}/api/users/search?username=alice
+Authorization: Bearer {{adminToken}}
+
+### Search Users by Role
+GET {{baseUrl}}/api/users/search?role=AGENT
+Authorization: Bearer {{adminToken}}
+
+### Search Users by Status
+GET {{baseUrl}}/api/users/search?status=ACTIVE
+Authorization: Bearer {{adminToken}}
+
+### Create New User (Admin creates Agent)
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "username": "frank",
+  "password": "SecurePassword123!",
+  "email": "frank.miller@realestatecrm.com",
+  "firstName": "Frank",
+  "lastName": "Miller",
+  "role": "AGENT",
+  "status": "ACTIVE"
+}
+
+### Create New User (Admin creates Broker)
+POST {{baseUrl}}/api/users
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "username": "grace",
+  "password": "SecurePassword123!",
+  "email": "grace.wilson@realestatecrm.com",
+  "firstName": "Grace",
+  "lastName": "Wilson",
+  "role": "BROKER",
+  "status": "ACTIVE"
+}
+
+### Update User
+PUT {{baseUrl}}/api/users/2
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+  "username": "alice",
+  "email": "alice.anderson@realestatecrm.com",
+  "firstName": "Alice",
+  "lastName": "Anderson-Smith",
+  "role": "AGENT",
+  "status": "ACTIVE"
+}
+
+### Update User Status (Deactivate)
+PATCH {{baseUrl}}/api/users/2/status?status=INACTIVE
+Authorization: Bearer {{adminToken}}
+
+### Update User Status (Reactivate)
+PATCH {{baseUrl}}/api/users/2/status?status=ACTIVE
+Authorization: Bearer {{adminToken}}
+
+### Change User Password (Self)
+PATCH {{baseUrl}}/api/users/2/password
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "currentPassword": "password",
+  "newPassword": "NewSecurePassword123!"
+}
+
+### Delete User
+DELETE {{baseUrl}}/api/users/10
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+# USER HIERARCHY ENDPOINTS
+###############################################################################
+
+### Get User Subordinates
+GET {{baseUrl}}/api/users/3/subordinates
+Authorization: Bearer {{brokerToken}}
+
+### Get User Supervisors
+GET {{baseUrl}}/api/users/2/supervisors
+Authorization: Bearer {{agentToken}}
+
+### Add Supervisor (Broker supervises Agent)
+POST {{baseUrl}}/api/users/2/supervisors/3
+Authorization: Bearer {{adminToken}}
+
+### Remove Supervisor
+DELETE {{baseUrl}}/api/users/2/supervisors/3
+Authorization: Bearer {{adminToken}}
+
+###############################################################################
+# HEALTH CHECK & MONITORING
+###############################################################################
+
+### Health Check
+GET {{baseUrl}}/actuator/health
+
+### Application Info (if enabled)
+GET {{baseUrl}}/actuator/info
+
+###############################################################################
+# ERROR HANDLING EXAMPLES
+###############################################################################
+
+### Test 404 - Property Not Found
+GET {{baseUrl}}/api/properties/99999
+Authorization: Bearer {{agentToken}}
+
+### Test 400 - Invalid Request (Missing Required Field)
+POST {{baseUrl}}/api/properties
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "description": "Missing title and price"
+}
+
+### Test 401 - Unauthorized (No Token)
+GET {{baseUrl}}/api/properties
+
+### Test 403 - Forbidden (Assistant tries to create property)
+POST {{baseUrl}}/api/properties
+Content-Type: {{contentType}}
+Authorization: Bearer {{assistantToken}}
+
+{
+  "title": "Test Property",
+  "description": "Should fail - assistants can't create",
+  "price": 100000
+}
+
+### Test 403 - Forbidden (Agent tries to access admin endpoint)
+POST {{baseUrl}}/api/property-attributes
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "name": "Test Attribute",
+  "dataType": "TEXT",
+  "category": "BASIC"
+}
+
+###############################################################################
+# BATCH OPERATIONS - Quick Data Setup
+###############################################################################
+
+### Quick Setup: Create 3 Properties
+POST {{baseUrl}}/api/properties
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "title": "Riverside Cottage",
+  "description": "Charming 2-bed cottage by the river with amazing views",
+  "price": 295000,
+  "status": "ACTIVE"
+}
+
+###
+POST {{baseUrl}}/api/properties
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "title": "Downtown Penthouse",
+  "description": "Luxury penthouse with panoramic city views and rooftop terrace",
+  "price": 1250000,
+  "status": "ACTIVE"
+}
+
+###
+POST {{baseUrl}}/api/properties
+Content-Type: {{contentType}}
+Authorization: Bearer {{agentToken}}
+
+{
+  "title": "Suburban Ranch",
+  "description": "Classic ranch-style home with large yard and updated kitchen",
+  "price": 385000,
+  "status": "ACTIVE"
+}
+
+###############################################################################
+# END OF API TESTS
+###############################################################################
