@@ -1,10 +1,7 @@
 package com.realestatecrm.controller;
 
 import com.realestatecrm.dto.common.MessageResponse;
-import com.realestatecrm.dto.property.request.CreatePropertyRequest;
-import com.realestatecrm.dto.property.request.SetAttributeValueRequest;
-import com.realestatecrm.dto.property.request.SharePropertyRequest;
-import com.realestatecrm.dto.property.request.UpdatePropertyRequest;
+import com.realestatecrm.dto.property.request.*;
 import com.realestatecrm.dto.property.response.PropertyResponse;
 import com.realestatecrm.dto.property.response.PropertySharingResponse;
 import com.realestatecrm.dto.property.response.AttributeValueResponse;

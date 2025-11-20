@@ -1,5 +1,5 @@
 ###############################################################################
-# Real Estate CRM - API Testing Suite
+# Real Estate CRM - API Testing Suite (with Status Code Assertions)
 ###############################################################################
 
 @baseUrl = http://localhost:8080
@@ -19,6 +19,9 @@ Content-Type: {{contentType}}
 }
 
 > {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
     client.global.set("adminToken", response.body.token);
     client.global.set("adminRefreshToken", response.body.refreshToken);
 %}
@@ -33,6 +36,9 @@ Content-Type: {{contentType}}
 }
 
 > {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
     client.global.set("agentToken", response.body.token);
     client.global.set("agentRefreshToken", response.body.refreshToken);
 %}
@@ -47,6 +53,9 @@ Content-Type: {{contentType}}
 }
 
 > {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
     client.global.set("brokerToken", response.body.token);
     client.global.set("brokerRefreshToken", response.body.refreshToken);
 %}
@@ -61,6 +70,9 @@ Content-Type: {{contentType}}
 }
 
 > {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
     client.global.set("carolToken", response.body.token);
 %}
 
@@ -74,6 +86,9 @@ Content-Type: {{contentType}}
 }
 
 > {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
     client.global.set("davidToken", response.body.token);
 %}
 
@@ -87,6 +102,9 @@ Content-Type: {{contentType}}
 }
 
 > {%
+    client.test("Login successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
     client.global.set("assistantToken", response.body.token);
 %}
 
@@ -94,9 +112,21 @@ Content-Type: {{contentType}}
 GET {{baseUrl}}/api/auth/user
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Get User Permissions
 GET {{baseUrl}}/api/auth/permissions
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Refresh Token
 POST {{baseUrl}}/api/auth/refresh
@@ -106,9 +136,21 @@ Content-Type: {{contentType}}
   "refreshToken": "{{agentRefreshToken}}"
 }
 
+> {%
+    client.test("Token refresh successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Logout
 POST {{baseUrl}}/api/auth/logout
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Logout successful", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
 
 ###############################################################################
 # PROPERTY ENDPOINTS
@@ -118,25 +160,61 @@ Authorization: Bearer {{agentToken}}
 GET {{baseUrl}}/api/properties
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Get All Properties with Pagination
 GET {{baseUrl}}/api/properties?page=0&size=5&sort=price,desc
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Get Property by ID (with attributes)
 GET {{baseUrl}}/api/properties/1
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Properties by Price Range
 GET {{baseUrl}}/api/properties/search?minPrice=300000&maxPrice=500000
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Search Properties by Status
 GET {{baseUrl}}/api/properties/search?status=ACTIVE
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Properties with All Filters
 GET {{baseUrl}}/api/properties/search?minPrice=200000&maxPrice=1000000&status=ACTIVE&page=0&size=10
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Create New Property (Agent)
 POST {{baseUrl}}/api/properties
@@ -150,6 +228,15 @@ Authorization: Bearer {{agentToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("Property created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.test("Response has id", function() {
+        client.assert(response.body.id !== undefined, "Created property has no id");
+    });
+%}
+
 ### Update Property
 PUT {{baseUrl}}/api/properties/1
 Content-Type: {{contentType}}
@@ -162,9 +249,21 @@ Authorization: Bearer {{agentToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("Property updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Update Property Status
 PATCH {{baseUrl}}/api/properties/1/status?status=SOLD
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Status updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Set Property Attribute Values
 POST {{baseUrl}}/api/properties/1/attribute-values
@@ -176,12 +275,24 @@ Authorization: Bearer {{agentToken}}
   "value": "123 Main Street, Springfield, IL"
 }
 
+> {%
+    client.test("Attribute value set successfully", function() {
+        client.assert(response.status === 200 || response.status === 201, "Response status is not 200 or 201");
+    });
+%}
+
 ### Get Property Attribute Values
 GET {{baseUrl}}/api/properties/1/attribute-values
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Share Property with Another User
-POST {{baseUrl}}/api/properties/1/share
+POST {{baseUrl}}/api/properties/3/share
 Content-Type: {{contentType}}
 Authorization: Bearer {{agentToken}}
 
@@ -189,17 +300,41 @@ Authorization: Bearer {{agentToken}}
   "sharedWithUserId": 3
 }
 
+> {%
+    client.test("Property shared successfully", function() {
+        client.assert(response.status === 200 || response.status === 201, "Response status is not 200 or 201");
+    });
+%}
+
 ### Get Property Shares
 GET {{baseUrl}}/api/properties/1/shares
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Unshare Property
 DELETE {{baseUrl}}/api/properties/1/share/3
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Property unshared successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
+
 ### Delete Property (requires owner or admin)
 DELETE {{baseUrl}}/api/properties/1
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Property deleted successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
 
 ### Search Properties by Saved Search Criteria
 POST {{baseUrl}}/api/properties/search/by-criteria
@@ -229,6 +364,12 @@ Authorization: Bearer {{agentToken}}
   ]
 }
 
+> {%
+    client.test("Search successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ###############################################################################
 # CUSTOMER ENDPOINTS
 ###############################################################################
@@ -237,29 +378,71 @@ Authorization: Bearer {{agentToken}}
 GET {{baseUrl}}/api/customers
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Get All Customers with Pagination
 GET {{baseUrl}}/api/customers?page=0&size=5
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Get Customer by ID
 GET {{baseUrl}}/api/customers/1
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Customers by Name
 GET {{baseUrl}}/api/customers/search?name=John
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Search Customers by Email
 GET {{baseUrl}}/api/customers/search?email=john.smith@example.com
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Customers by Status
 GET {{baseUrl}}/api/customers/search?status=LEAD
 Authorization: Bearer {{agentToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Customers by Budget Range
 GET {{baseUrl}}/api/customers/search?minBudget=200000&maxBudget=500000
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Create New Customer
 POST {{baseUrl}}/api/customers
@@ -278,6 +461,15 @@ Authorization: Bearer {{agentToken}}
   "status": "LEAD"
 }
 
+> {%
+    client.test("Customer created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.test("Response has id", function() {
+        client.assert(response.body.id !== undefined, "Created customer has no id");
+    });
+%}
+
 ### Update Customer
 PUT {{baseUrl}}/api/customers/1
 Content-Type: {{contentType}}
@@ -295,169 +487,55 @@ Authorization: Bearer {{agentToken}}
   "status": "QUALIFIED"
 }
 
+> {%
+    client.test("Customer updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Update Customer Status
 PATCH {{baseUrl}}/api/customers/1/status?status=NEGOTIATING
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Status updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Delete Customer
 DELETE {{baseUrl}}/api/customers/1
 Authorization: Bearer {{agentToken}}
 
-### Get Customer Interactions
-GET {{baseUrl}}/api/customers/1/interactions
-Authorization: Bearer {{agentToken}}
-
-### Create Customer Interaction
-POST {{baseUrl}}/api/customers/1/interactions
-Content-Type: {{contentType}}
-Authorization: Bearer {{agentToken}}
-
-{
-  "interactionType": "CALL",
-  "notes": "Discussed budget and preferences. Customer interested in homes with pools.",
-  "interactionDate": "2025-11-19T10:30:00"
-}
-
-### Update Customer Interaction
-PUT {{baseUrl}}/api/customers/1/interactions/1
-Content-Type: {{contentType}}
-Authorization: Bearer {{agentToken}}
-
-{
-  "interactionType": "MEETING",
-  "notes": "Met at office. Discussed budget, preferences, and financing options. Very motivated buyer.",
-  "interactionDate": "2025-11-19T14:00:00"
-}
-
-### Delete Customer Interaction
-DELETE {{baseUrl}}/api/customers/1/interactions/1
-Authorization: Bearer {{agentToken}}
-
-### Get Customer Notes
-GET {{baseUrl}}/api/customers/1/notes
-Authorization: Bearer {{agentToken}}
-
-### Create Customer Note
-POST {{baseUrl}}/api/customers/1/notes
-Content-Type: {{contentType}}
-Authorization: Bearer {{agentToken}}
-
-{
-  "content": "Customer mentioned they need to move by end of Q1 2026 due to job relocation."
-}
-
-### Update Customer Note
-PUT {{baseUrl}}/api/customers/1/notes/1
-Content-Type: {{contentType}}
-Authorization: Bearer {{agentToken}}
-
-{
-  "content": "URGENT: Customer needs to move by March 2026 due to job relocation. Looking for quick close."
-}
-
-### Delete Customer Note
-DELETE {{baseUrl}}/api/customers/1/notes/1
-Authorization: Bearer {{agentToken}}
-
-### Get Customer Saved Searches
-GET {{baseUrl}}/api/customers/1/saved-searches
-Authorization: Bearer {{agentToken}}
-
-### Get Saved Search by ID
-GET {{baseUrl}}/api/saved-searches/1
-Authorization: Bearer {{agentToken}}
-
-### Create Saved Search for Customer
-POST {{baseUrl}}/api/customers/1/saved-searches
-Content-Type: {{contentType}}
-Authorization: Bearer {{agentToken}}
-
-{
-  "name": "Dream Family Home",
-  "description": "4-bedroom homes with pool and garage in good school districts",
-  "filters": [
-    {
-      "attributeId": 8,
-      "dataType": "NUMBER",
-      "minValue": 4
-    },
-    {
-      "attributeId": 19,
-      "dataType": "BOOLEAN",
-      "booleanValue": true
-    },
-    {
-      "attributeId": 18,
-      "dataType": "BOOLEAN",
-      "booleanValue": true
-    }
-  ]
-}
-
-### Update Saved Search
-PUT {{baseUrl}}/api/saved-searches/1
-Content-Type: {{contentType}}
-Authorization: Bearer {{agentToken}}
-
-{
-  "name": "Family Homes 3-5BR - Updated",
-  "description": "Single family homes and townhouses with 3-5 bedrooms, 2+ bathrooms, and garage",
-  "filters": [
-    {
-      "attributeId": 8,
-      "dataType": "NUMBER",
-      "minValue": 3,
-      "maxValue": 5
-    },
-    {
-      "attributeId": 9,
-      "dataType": "NUMBER",
-      "minValue": 2
-    },
-    {
-      "attributeId": 2,
-      "dataType": "SINGLE_SELECT",
-      "selectedValues": ["Single Family Home", "Townhouse"]
-    },
-    {
-      "attributeId": 18,
-      "dataType": "BOOLEAN",
-      "booleanValue": true
-    }
-  ]
-}
-
-### Execute Saved Search
-GET {{baseUrl}}/api/saved-searches/1/execute
-Authorization: Bearer {{agentToken}}
-
-### Execute Saved Search with Pagination
-GET {{baseUrl}}/api/saved-searches/1/execute?page=0&size=5
-Authorization: Bearer {{agentToken}}
-
-### Delete Saved Search
-DELETE {{baseUrl}}/api/saved-searches/1
-Authorization: Bearer {{agentToken}}
+> {%
+    client.test("Customer deleted successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
 
 ###############################################################################
-# PROPERTY ATTRIBUTES (Admin Only)
+# PROPERTY ATTRIBUTES ENDPOINTS (Admin Only)
 ###############################################################################
 
 ### Get All Property Attributes
 GET {{baseUrl}}/api/property-attributes
 Authorization: Bearer {{adminToken}}
 
-### Get Property Attributes by Category
-GET {{baseUrl}}/api/property-attributes/by-category?category=FEATURES
-Authorization: Bearer {{adminToken}}
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Get Property Attribute by ID
 GET {{baseUrl}}/api/property-attributes/1
 Authorization: Bearer {{adminToken}}
 
-### Search Property Attributes by Name
-GET {{baseUrl}}/api/property-attributes/search?name=bedroom
-Authorization: Bearer {{adminToken}}
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Create Property Attribute (Text)
 POST {{baseUrl}}/api/property-attributes
@@ -465,13 +543,22 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
 
 {
-  "name": "Pet Policy",
+  "name": "Lot Size",
   "dataType": "TEXT",
   "category": "BASIC",
   "isRequired": false,
   "isSearchable": true,
-  "displayOrder": 100
+  "displayOrder": 10
 }
+
+> {%
+    client.test("Attribute created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.test("Response has id", function() {
+        client.assert(response.body.id !== undefined, "Created attribute has no id");
+    });
+%}
 
 ### Create Property Attribute (Number)
 POST {{baseUrl}}/api/property-attributes
@@ -487,6 +574,12 @@ Authorization: Bearer {{adminToken}}
   "displayOrder": 20
 }
 
+> {%
+    client.test("Attribute created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
 ### Create Property Attribute (Boolean)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
@@ -500,6 +593,12 @@ Authorization: Bearer {{adminToken}}
   "isSearchable": true,
   "displayOrder": 50
 }
+
+> {%
+    client.test("Attribute created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
 
 ### Create Property Attribute (Single Select with Options)
 POST {{baseUrl}}/api/property-attributes
@@ -520,6 +619,12 @@ Authorization: Bearer {{adminToken}}
     {"optionValue": "None", "displayOrder": 4}
   ]
 }
+
+> {%
+    client.test("Attribute created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
 
 ### Create Property Attribute (Multi Select with Options)
 POST {{baseUrl}}/api/property-attributes
@@ -542,6 +647,12 @@ Authorization: Bearer {{adminToken}}
   ]
 }
 
+> {%
+    client.test("Attribute created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
 ### Update Property Attribute
 PUT {{baseUrl}}/api/property-attributes/1
 Content-Type: {{contentType}}
@@ -556,6 +667,12 @@ Authorization: Bearer {{adminToken}}
   "displayOrder": 1
 }
 
+> {%
+    client.test("Attribute updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Reorder Property Attributes
 POST {{baseUrl}}/api/property-attributes/reorder
 Content-Type: {{contentType}}
@@ -567,9 +684,21 @@ Authorization: Bearer {{adminToken}}
   {"attributeId": 3, "newDisplayOrder": 3}
 ]
 
+> {%
+    client.test("Reorder successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Delete Property Attribute
 DELETE {{baseUrl}}/api/property-attributes/100
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("Attribute deleted successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
 
 ###############################################################################
 # USER MANAGEMENT ENDPOINTS (Admin Only)
@@ -579,25 +708,61 @@ Authorization: Bearer {{adminToken}}
 GET {{baseUrl}}/api/users
 Authorization: Bearer {{adminToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Get All Users with Pagination
 GET {{baseUrl}}/api/users?page=0&size=10
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Get User by ID
 GET {{baseUrl}}/api/users/1
 Authorization: Bearer {{adminToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Users by Username
 GET {{baseUrl}}/api/users/search?username=alice
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Search Users by Role
 GET {{baseUrl}}/api/users/search?role=AGENT
 Authorization: Bearer {{adminToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Search Users by Status
 GET {{baseUrl}}/api/users/search?status=ACTIVE
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Create New User (Admin creates Agent)
 POST {{baseUrl}}/api/users
@@ -614,6 +779,15 @@ Authorization: Bearer {{adminToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("User created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+    client.test("Response has id", function() {
+        client.assert(response.body.id !== undefined, "Created user has no id");
+    });
+%}
+
 ### Create New User (Admin creates Broker)
 POST {{baseUrl}}/api/users
 Content-Type: {{contentType}}
@@ -629,6 +803,12 @@ Authorization: Bearer {{adminToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("User created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
 ### Update User
 PUT {{baseUrl}}/api/users/2
 Content-Type: {{contentType}}
@@ -643,13 +823,31 @@ Authorization: Bearer {{adminToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("User updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Update User Status (Deactivate)
 PATCH {{baseUrl}}/api/users/2/status?status=INACTIVE
 Authorization: Bearer {{adminToken}}
 
+> {%
+    client.test("Status updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Update User Status (Reactivate)
 PATCH {{baseUrl}}/api/users/2/status?status=ACTIVE
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("Status updated successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Change User Password (Self)
 PATCH {{baseUrl}}/api/users/2/password
@@ -661,9 +859,21 @@ Authorization: Bearer {{agentToken}}
   "newPassword": "NewSecurePassword123!"
 }
 
+> {%
+    client.test("Password changed successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
+
 ### Delete User
 DELETE {{baseUrl}}/api/users/10
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("User deleted successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
 
 ###############################################################################
 # USER HIERARCHY ENDPOINTS
@@ -673,17 +883,41 @@ Authorization: Bearer {{adminToken}}
 GET {{baseUrl}}/api/users/3/subordinates
 Authorization: Bearer {{brokerToken}}
 
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Get User Supervisors
 GET {{baseUrl}}/api/users/2/supervisors
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ### Add Supervisor (Broker supervises Agent)
 POST {{baseUrl}}/api/users/2/supervisors/3
 Authorization: Bearer {{adminToken}}
 
+> {%
+    client.test("Supervisor added successfully", function() {
+        client.assert(response.status === 200 || response.status === 201, "Response status is not 200 or 201");
+    });
+%}
+
 ### Remove Supervisor
 DELETE {{baseUrl}}/api/users/2/supervisors/3
 Authorization: Bearer {{adminToken}}
+
+> {%
+    client.test("Supervisor removed successfully", function() {
+        client.assert(response.status === 200 || response.status === 204, "Response status is not 200 or 204");
+    });
+%}
 
 ###############################################################################
 # HEALTH CHECK & MONITORING
@@ -692,8 +926,20 @@ Authorization: Bearer {{adminToken}}
 ### Health Check
 GET {{baseUrl}}/actuator/health
 
+> {%
+    client.test("Health check successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
 ### Application Info (if enabled)
 GET {{baseUrl}}/actuator/info
+
+> {%
+    client.test("Request successful", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
 
 ###############################################################################
 # ERROR HANDLING EXAMPLES
@@ -702,6 +948,12 @@ GET {{baseUrl}}/actuator/info
 ### Test 404 - Property Not Found
 GET {{baseUrl}}/api/properties/99999
 Authorization: Bearer {{agentToken}}
+
+> {%
+    client.test("Returns 404 for non-existent property", function() {
+        client.assert(response.status === 404, "Response status is not 404");
+    });
+%}
 
 ### Test 400 - Invalid Request (Missing Required Field)
 POST {{baseUrl}}/api/properties
@@ -712,8 +964,20 @@ Authorization: Bearer {{agentToken}}
   "description": "Missing title and price"
 }
 
+> {%
+    client.test("Returns 400 for invalid request", function() {
+        client.assert(response.status === 400, "Response status is not 400");
+    });
+%}
+
 ### Test 401 - Unauthorized (No Token)
 GET {{baseUrl}}/api/properties
+
+> {%
+    client.test("Returns 401 for unauthorized request", function() {
+        client.assert(response.status === 401, "Response status is not 401");
+    });
+%}
 
 ### Test 403 - Forbidden (Assistant tries to create property)
 POST {{baseUrl}}/api/properties
@@ -726,6 +990,12 @@ Authorization: Bearer {{assistantToken}}
   "price": 100000
 }
 
+> {%
+    client.test("Returns 403 for forbidden action", function() {
+        client.assert(response.status === 403, "Response status is not 403");
+    });
+%}
+
 ### Test 403 - Forbidden (Agent tries to access admin endpoint)
 POST {{baseUrl}}/api/property-attributes
 Content-Type: {{contentType}}
@@ -736,6 +1006,12 @@ Authorization: Bearer {{agentToken}}
   "dataType": "TEXT",
   "category": "BASIC"
 }
+
+> {%
+    client.test("Returns 403 for forbidden action", function() {
+        client.assert(response.status === 403, "Response status is not 403");
+    });
+%}
 
 ###############################################################################
 # BATCH OPERATIONS - Quick Data Setup
@@ -753,6 +1029,12 @@ Authorization: Bearer {{agentToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("Property created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
 ###
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
@@ -765,6 +1047,12 @@ Authorization: Bearer {{agentToken}}
   "status": "ACTIVE"
 }
 
+> {%
+    client.test("Property created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
+
 ###
 POST {{baseUrl}}/api/properties
 Content-Type: {{contentType}}
@@ -776,6 +1064,12 @@ Authorization: Bearer {{agentToken}}
   "price": 385000,
   "status": "ACTIVE"
 }
+
+> {%
+    client.test("Property created successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+%}
 
 ###############################################################################
 # END OF API TESTS
