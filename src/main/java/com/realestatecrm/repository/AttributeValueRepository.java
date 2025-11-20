@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AttributeValueRepository extends JpaRepository<AttributeValue, Long> {
+public interface AttributeValueRepository extends BaseRepository<AttributeValue, Long> {
 
     List<AttributeValue> findByPropertyId(Long propertyId);
 

@@ -4,19 +4,12 @@ import com.realestatecrm.enums.InteractionType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "customer_interactions")
-@EntityListeners(AuditingEntityListener.class)
-public class CustomerInteraction {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CustomerInteraction extends CreatedDateEntity {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -51,10 +44,6 @@ public class CustomerInteraction {
     @JoinColumn(name = "related_property_id")
     private Property relatedProperty;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-
     // Constructors
     public CustomerInteraction() {}
 
@@ -68,14 +57,6 @@ public class CustomerInteraction {
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public Customer getCustomer() {
         return customer;
     }
@@ -138,25 +119,5 @@ public class CustomerInteraction {
 
     public void setRelatedProperty(Property relatedProperty) {
         this.relatedProperty = relatedProperty;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CustomerInteraction that)) return false;
-        return id != null && id.equals(that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 }

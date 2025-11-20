@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 @Repository
-public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
+public interface RefreshTokenRepository extends BaseRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByToken(String token);
 

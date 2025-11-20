@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CustomerNoteRepository extends JpaRepository<CustomerNote, Long> {
+public interface CustomerNoteRepository extends BaseRepository<CustomerNote, Long> {
 
     // LAZY FIX: Eagerly fetch customer and createdBy to prevent LazyInitializationException
     @EntityGraph(attributePaths = {"customer", "createdBy"})

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PropertyRepository extends JpaRepository<Property, Long> {
+public interface PropertyRepository extends BaseRepository<Property, Long> {
 
     // LAZY FIX: Optimized query with agent eager loading to avoid LazyInitializationException
     @EntityGraph(attributePaths = {"agent"})

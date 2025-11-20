@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PropertyAttributeRepository extends JpaRepository<PropertyAttribute, Long> {
+public interface PropertyAttributeRepository extends BaseRepository<PropertyAttribute, Long> {
 
     List<PropertyAttribute> findByCategory(PropertyCategory category);
 

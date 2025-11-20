@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface CustomerInteractionRepository extends JpaRepository<CustomerInteraction, Long> {
+public interface CustomerInteractionRepository extends BaseRepository<CustomerInteraction, Long> {
 
     // LAZY FIX: Eagerly fetch customer, user, and relatedProperty to prevent LazyInitializationException
     @EntityGraph(attributePaths = {"customer", "user", "relatedProperty"})

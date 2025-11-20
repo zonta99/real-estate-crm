@@ -5,22 +5,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "customers")
-@EntityListeners(AuditingEntityListener.class)
-public class Customer {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Customer extends AuditableEntity {
 
     @NotBlank
     @Column(name = "first_name", nullable = false)
@@ -60,13 +51,6 @@ public class Customer {
     @JoinColumn(name = "agent_id", nullable = false)
     private User agent;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
-
     // Relationships
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<SavedSearch> savedSearches;
@@ -82,9 +66,6 @@ public class Customer {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
 
@@ -115,12 +96,6 @@ public class Customer {
     public User getAgent() { return agent; }
     public void setAgent(User agent) { this.agent = agent; }
 
-    public LocalDateTime getCreatedDate() { return createdDate; }
-    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
-
-    public LocalDateTime getUpdatedDate() { return updatedDate; }
-    public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
-
     public List<SavedSearch> getSavedSearches() { return savedSearches; }
     public void setSavedSearches(List<SavedSearch> savedSearches) { this.savedSearches = savedSearches; }
 
@@ -130,17 +105,5 @@ public class Customer {
 
     public boolean hasBudgetRange() {
         return budgetMin != null || budgetMax != null;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Customer customer)) return false;
-        return id != null && id.equals(customer.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
     }
 }

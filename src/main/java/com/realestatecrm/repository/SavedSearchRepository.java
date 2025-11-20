@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface SavedSearchRepository extends JpaRepository<SavedSearch, Long> {
+public interface SavedSearchRepository extends BaseRepository<SavedSearch, Long> {
 
     // LAZY FIX: Optimized query with customer eager loading to avoid LazyInitializationException
     @EntityGraph(attributePaths = {"customer", "customer.agent"})

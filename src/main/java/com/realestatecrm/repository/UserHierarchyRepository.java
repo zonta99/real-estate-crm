@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserHierarchyRepository extends JpaRepository<UserHierarchy, Long> {
+public interface UserHierarchyRepository extends BaseRepository<UserHierarchy, Long> {
 
     Optional<UserHierarchy> findBySupervisorIdAndSubordinateId(Long supervisorId, Long subordinateId);
 

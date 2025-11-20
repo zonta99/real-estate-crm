@@ -5,21 +5,12 @@ import com.realestatecrm.enums.PropertyDataType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "property_attributes")
-@EntityListeners(AuditingEntityListener.class)
-public class PropertyAttribute {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class PropertyAttribute extends AuditableEntity {
 
     @NotBlank
     @Column(nullable = false)
@@ -46,13 +37,6 @@ public class PropertyAttribute {
     @Column(name = "display_order")
     private Integer displayOrder;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdDate;
-
-    @LastModifiedDate
-    private LocalDateTime updatedDate;
-
     // Relationships
     @OneToMany(mappedBy = "attribute", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("displayOrder ASC")
@@ -71,9 +55,6 @@ public class PropertyAttribute {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
@@ -91,12 +72,6 @@ public class PropertyAttribute {
 
     public Integer getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
-
-    public LocalDateTime getCreatedDate() { return createdDate; }
-    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
-
-    public LocalDateTime getUpdatedDate() { return updatedDate; }
-    public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
 
     public List<PropertyAttributeOption> getOptions() { return options; }
     public void setOptions(List<PropertyAttributeOption> options) { this.options = options; }

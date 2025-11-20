@@ -9,11 +9,7 @@ import java.util.Date;
 @Entity
 @Table(name = "attribute_value",
         uniqueConstraints = @UniqueConstraint(columnNames = {"property_id", "attribute_id"}))
-public class AttributeValue {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class AttributeValue extends BaseEntity {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -76,9 +72,6 @@ public class AttributeValue {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public Property getProperty() { return property; }
     public void setProperty(Property property) { this.property = property; }
 
@@ -109,19 +102,5 @@ public class AttributeValue {
             case MULTI_SELECT -> multiSelectValue;
             case DATE -> dateValue;
         };
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AttributeValue that)) return false;
-        return (property != null ? property.equals(that.property) : that.property == null) &&
-               (attribute != null ? attribute.equals(that.attribute) : that.attribute == null);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * (property != null ? property.hashCode() : 0) +
-                (attribute != null ? attribute.hashCode() : 0);
     }
 }

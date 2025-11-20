@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PropertyAttributeOptionRepository extends JpaRepository<PropertyAttributeOption, Long> {
+public interface PropertyAttributeOptionRepository extends BaseRepository<PropertyAttributeOption, Long> {
 
     List<PropertyAttributeOption> findByAttributeId(Long attributeId);
 
