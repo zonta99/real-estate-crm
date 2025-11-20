@@ -108,7 +108,8 @@ public class PropertyService {
     }
 
     public Property updatePropertyStatus(Long id, PropertyStatus status) {
-        Property property = propertyRepository.findById(id)
+        // LAZY FIX: Use findByIdWithAgent to eagerly fetch agent relationship
+        Property property = propertyRepository.findByIdWithAgent(id)
                 .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + id));
         property.setStatus(status);
         return propertyRepository.save(property);
