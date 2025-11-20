@@ -114,6 +114,13 @@ public class CustomerService {
         customerRepository.deleteById(id);
     }
 
+    public Customer updateCustomerStatus(Long id, CustomerStatus status) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found with id: " + id));
+        customer.setStatus(status);
+        return customerRepository.save(customer);
+    }
+
     @Transactional(readOnly = true)
     public List<Customer> searchCustomers(String name, CustomerStatus status, String phone, String email) {
         if (name != null && !name.trim().isEmpty()) {
@@ -128,7 +135,7 @@ public class CustomerService {
         if (email != null && !email.trim().isEmpty()) {
             return customerRepository.findByEmail(email.trim()).map(List::of).orElse(List.of());
         }
-        return customerRepository.findAll();
+        return customerRepository.findAllWithAgent();
     }
 
     @Transactional(readOnly = true)

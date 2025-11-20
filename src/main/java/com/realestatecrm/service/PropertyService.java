@@ -1,6 +1,7 @@
 package com.realestatecrm.service;
 
 import com.realestatecrm.entity.*;
+import com.realestatecrm.enums.PropertyStatus;
 import com.realestatecrm.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +105,13 @@ public class PropertyService {
             throw new EntityNotFoundException("Property not found with id: " + id);
         }
         propertyRepository.deleteById(id);
+    }
+
+    public Property updatePropertyStatus(Long id, PropertyStatus status) {
+        Property property = propertyRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Property not found with id: " + id));
+        property.setStatus(status);
+        return propertyRepository.save(property);
     }
 
     public AttributeValue setAttributeValue(Long propertyId, Long attributeId, Object value) {

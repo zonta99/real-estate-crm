@@ -3,6 +3,7 @@ package com.realestatecrm.service;
 import com.realestatecrm.entity.User;
 import com.realestatecrm.entity.UserHierarchy;
 import com.realestatecrm.enums.Role;
+import com.realestatecrm.enums.UserStatus;
 import com.realestatecrm.repository.UserHierarchyRepository;
 import com.realestatecrm.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -84,6 +85,20 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public User updateUserStatus(Long id, UserStatus status) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        user.setStatus(status);
+        return userRepository.save(user);
+    }
+
+    public User updateUserPassword(Long id, String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        return userRepository.save(user);
+    }
+
     public void addSupervisorRelationship(Long supervisorId, Long subordinateId) {
         if (supervisorId.equals(subordinateId)) {
             throw new IllegalArgumentException("A user cannot supervise themselves");
@@ -119,6 +134,11 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<User> getDirectSubordinates(Long supervisorId) {
         return userRepository.findDirectSubordinates(supervisorId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> getDirectSupervisors(Long subordinateId) {
+        return userRepository.findDirectSupervisors(subordinateId);
     }
 
     // SIMPLIFIED: Use repository method (covers 2 levels - sufficient for most real estate orgs)
