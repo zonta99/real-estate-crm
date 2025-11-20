@@ -142,7 +142,7 @@ public class PropertyAttributeService {
     }
 
     public void deleteAttributeOption(Long optionId) {
-        PropertyAttributeOption option = propertyAttributeOptionRepository.findById(optionId)
+        propertyAttributeOptionRepository.findById(optionId)
                 .orElseThrow(() -> new EntityNotFoundException("Attribute option not found with id: " + optionId));
 
         // In a production system, you might want to check if this option is used in property values
@@ -160,6 +160,16 @@ public class PropertyAttributeService {
             }
 
             attribute.setDisplayOrder(i + 1);
+            propertyAttributeRepository.save(attribute);
+        }
+    }
+
+    public void updateAttributeDisplayOrders(java.util.List<com.realestatecrm.controller.PropertyAttributeController.AttributeDisplayOrderUpdate> updates) {
+        for (com.realestatecrm.controller.PropertyAttributeController.AttributeDisplayOrderUpdate update : updates) {
+            PropertyAttribute attribute = propertyAttributeRepository.findById(update.getAttributeId())
+                    .orElseThrow(() -> new EntityNotFoundException("Attribute not found with id: " + update.getAttributeId()));
+
+            attribute.setDisplayOrder(update.getNewDisplayOrder());
             propertyAttributeRepository.save(attribute);
         }
     }

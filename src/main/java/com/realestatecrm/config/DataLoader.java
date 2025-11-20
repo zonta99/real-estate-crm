@@ -605,7 +605,7 @@ public class DataLoader implements CommandLineRunner {
         createOptions(sewer, "Public Sewer", "Septic Tank", "Community System", "Other");
 
         // Internet/Cable
-        PropertyAttribute internet = createAttribute("Internet/Cable Ready", PropertyDataType.BOOLEAN, PropertyCategory.FEATURES, 20, false, false);
+        createAttribute("Internet/Cable Ready", PropertyDataType.BOOLEAN, PropertyCategory.FEATURES, 20, false, false);
 
         // Utilities Included
         PropertyAttribute utilities = createAttribute("Utilities Included", PropertyDataType.MULTI_SELECT, PropertyCategory.FEATURES, 21, false, false);
@@ -1040,7 +1040,7 @@ public class DataLoader implements CommandLineRunner {
                     walkableFilters);
 
             // Search 15: Customer5's School District Focus
-            PropertyAttribute schoolDistrictAttr = getAttributeByName("School District");
+            getAttributeByName("School District");
             PropertyAttribute specialRoomsAttr = getAttributeByName("Special Rooms");
             List<SearchFilterDTO> schoolFocusFilters = new ArrayList<>();
 

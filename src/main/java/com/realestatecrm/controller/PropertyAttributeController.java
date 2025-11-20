@@ -153,4 +153,25 @@ public class PropertyAttributeController {
         propertyAttributeService.reorderAttributes(category, request.getAttributeIds());
         return ResponseEntity.ok(new MessageResponse("Attributes reordered successfully"));
     }
+
+    @PostMapping("/reorder")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<MessageResponse> updateAttributeDisplayOrders(
+            @RequestBody List<AttributeDisplayOrderUpdate> updates) {
+
+        propertyAttributeService.updateAttributeDisplayOrders(updates);
+        return ResponseEntity.ok(new MessageResponse("Attributes reordered successfully"));
+    }
+
+    // Inner DTO class for attribute display order updates
+    public static class AttributeDisplayOrderUpdate {
+        private Long attributeId;
+        private Integer newDisplayOrder;
+
+        public Long getAttributeId() { return attributeId; }
+        public void setAttributeId(Long attributeId) { this.attributeId = attributeId; }
+
+        public Integer getNewDisplayOrder() { return newDisplayOrder; }
+        public void setNewDisplayOrder(Integer newDisplayOrder) { this.newDisplayOrder = newDisplayOrder; }
+    }
 }

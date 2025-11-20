@@ -135,12 +135,12 @@ public class PropertyController {
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<PropertyResponse> updatePropertyStatus(
             @PathVariable Long id,
-            @Valid @RequestBody UpdatePropertyStatusRequest request) {
-        Property property = propertyService.updatePropertyStatus(id, request.status());
+            @RequestParam PropertyStatus status) {
+        Property property = propertyService.updatePropertyStatus(id, status);
         return ResponseEntity.ok(propertyMapper.toResponse(property));
     }
 
-    @PostMapping("/{id}/values")
+    @PostMapping("/{id}/attribute-values")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     @Transactional
     public ResponseEntity<AttributeValueResponse> setAttributeValue(
@@ -156,7 +156,7 @@ public class PropertyController {
         return ResponseEntity.ok(propertyMapper.toAttributeValueResponse(value));
     }
 
-    @GetMapping("/{id}/values")
+    @GetMapping("/{id}/attribute-values")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     @Transactional(readOnly = true)
     public ResponseEntity<List<AttributeValueResponse>> getAttributeValues(@PathVariable Long id) {
@@ -168,7 +168,7 @@ public class PropertyController {
         return ResponseEntity.ok(responses);
     }
 
-    @DeleteMapping("/{id}/values/{attributeId}")
+    @DeleteMapping("/{id}/attribute-values/{attributeId}")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<MessageResponse> deleteAttributeValue(
             @PathVariable Long id,
@@ -202,7 +202,7 @@ public class PropertyController {
         return ResponseEntity.ok(new MessageResponse("Property unshared successfully"));
     }
 
-    @GetMapping("/{id}/sharing")
+    @GetMapping("/{id}/shares")
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<List<PropertySharingResponse>> getPropertySharing(@PathVariable Long id) {
         List<PropertySharing> sharing = propertyService.getPropertySharing(id);
