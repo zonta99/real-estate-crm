@@ -75,6 +75,33 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER')")
+    public ResponseEntity<List<UserResponse>> searchUsers(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) UserStatus status) {
+
+        List<User> users;
+        if (username != null) {
+            User user = userService.getUserByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            users = List.of(user);
+        } else if (role != null) {
+            users = userService.getUsersByRole(role);
+        } else if (status != null) {
+            users = userService.getUsersByStatus(status);
+        } else {
+            throw new IllegalArgumentException("At least one search parameter is required");
+        }
+
+        List<UserResponse> responses = users.stream()
+                .map(userMapper::toResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
@@ -119,12 +146,12 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUserStatus(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateUserStatusRequest request) {
-        User user = userService.updateUserStatus(id, request.status());
+            @RequestParam UserStatus status) {
+        User user = userService.updateUserStatus(id, status);
         return ResponseEntity.ok(userMapper.toResponse(user));
     }
 
-    @PutMapping("/{id}/password")
+    @PatchMapping("/{id}/password")
     @PreAuthorize("hasRole('ADMIN') or @userService.getUserByUsername(authentication.name).get().id == #id")
     public ResponseEntity<MessageResponse> updateUserPassword(
             @PathVariable Long id,
@@ -133,17 +160,17 @@ public class UserController {
         return ResponseEntity.ok(new MessageResponse("Password updated successfully"));
     }
 
-    @PostMapping("/{id}/hierarchy")
+    @PostMapping("/{id}/supervisors/{supervisorId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER')")
     public ResponseEntity<MessageResponse> addSupervisorRelationship(
             @PathVariable Long id,
-            @Valid @RequestBody HierarchyRequest request) {
+            @PathVariable Long supervisorId) {
 
-        userService.addSupervisorRelationship(request.getSupervisorId(), id);
+        userService.addSupervisorRelationship(supervisorId, id);
         return ResponseEntity.ok(new MessageResponse("Supervisor relationship added successfully"));
     }
 
-    @DeleteMapping("/{id}/hierarchy/{supervisorId}")
+    @DeleteMapping("/{id}/supervisors/{supervisorId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BROKER')")
     public ResponseEntity<MessageResponse> removeSupervisorRelationship(
             @PathVariable Long id,

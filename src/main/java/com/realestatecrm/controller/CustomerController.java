@@ -121,8 +121,8 @@ public class CustomerController {
     @PreAuthorize("hasRole('AGENT') or hasRole('BROKER') or hasRole('ADMIN')")
     public ResponseEntity<CustomerResponse> updateCustomerStatus(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateCustomerStatusRequest request) {
-        Customer customer = customerService.updateCustomerStatus(id, request.status());
+            @RequestParam CustomerStatus status) {
+        Customer customer = customerService.updateCustomerStatus(id, status);
         return ResponseEntity.ok(customerMapper.toResponse(customer));
     }
 

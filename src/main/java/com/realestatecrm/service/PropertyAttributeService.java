@@ -164,6 +164,16 @@ public class PropertyAttributeService {
         }
     }
 
+    public void updateAttributeDisplayOrders(java.util.List<com.realestatecrm.controller.PropertyAttributeController.AttributeDisplayOrderUpdate> updates) {
+        for (com.realestatecrm.controller.PropertyAttributeController.AttributeDisplayOrderUpdate update : updates) {
+            PropertyAttribute attribute = propertyAttributeRepository.findById(update.getAttributeId())
+                    .orElseThrow(() -> new EntityNotFoundException("Attribute not found with id: " + update.getAttributeId()));
+
+            attribute.setDisplayOrder(update.getNewDisplayOrder());
+            propertyAttributeRepository.save(attribute);
+        }
+    }
+
     private void validateAttribute(PropertyAttribute attribute) {
         if (attribute.getName() == null || attribute.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Attribute name cannot be empty");

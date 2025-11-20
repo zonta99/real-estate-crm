@@ -57,6 +57,11 @@ public class UserService {
         return userRepository.findByRoleAndActiveStatus(role);
     }
 
+    @Transactional(readOnly = true)
+    public List<User> getUsersByStatus(UserStatus status) {
+        return userRepository.findByStatus(status);
+    }
+
     public User createUser(User user) {
         validateNewUser(user);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
